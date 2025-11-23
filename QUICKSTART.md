@@ -97,7 +97,7 @@ python -m src.pipeline.optimizer \
 ```
 
 This will:
-- Use GPT-4 to generate optimized prompts
+- Use GPT-5 to generate optimized prompts
 - Try different instruction phrasings
 - Select best few-shot examples
 - Save compiled program to `artifacts/`

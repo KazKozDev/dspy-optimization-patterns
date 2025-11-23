@@ -109,13 +109,13 @@ class LLMJudgeMetric:
     - Reasoning quality matters more than exact wording
 
     Critical: The judge model should be STRONGER than the task model.
-    Never use GPT-4o-mini to judge GPT-4o.
+    Never use GPT-5o-mini to judge GPT-5o.
     """
 
     def __init__(self, judge_model: Optional[dspy.LM] = None):
         """
         Args:
-            judge_model: Strong model for evaluation (e.g., GPT-4o)
+            judge_model: Strong model for evaluation (e.g., GPT-5o)
         """
         self.judge_model = judge_model
         self.evaluator = dspy.ChainOfThought(EvaluateAnswer)
