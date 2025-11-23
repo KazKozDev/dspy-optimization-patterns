@@ -1,0 +1,35 @@
+# DSPy Optimizer Configuration
+
+# Bootstrap Few-Shot with Random Search
+bootstrap:
+  type: "BootstrapFewShotWithRandomSearch"
+  max_bootstrapped_demos: 8  # Number of few-shot examples to generate
+  max_labeled_demos: 4        # Number of examples from training set
+  num_candidate_programs: 10  # How many prompt variations to try
+  num_threads: 4              # Parallel execution
+  metric_threshold: 0.75      # Minimum acceptable score
+
+# MIPRO (Multi-Prompt Instruction Proposal Optimizer)
+mipro:
+  type: "MIPRO"
+  num_candidates: 10          # Instructions to generate
+  init_temperature: 1.0       # Creativity during generation
+  max_bootstrapped_demos: 8
+  max_labeled_demos: 4
+  num_threads: 4
+  metric_threshold: 0.80
+
+# Signature Optimizer (for refining input/output descriptions)
+signature_opt:
+  type: "SignatureOptimizer"
+  prompt_model: "gpt-4o"      # Model for generating better descriptions
+  task_model: "gpt-4o-mini"   # Model for testing variations
+  max_iterations: 5
+
+# Optimization run settings
+run:
+  train_size: 50              # Examples for optimization
+  dev_size: 100               # Examples for validation during optimization
+  test_size: 200              # Hold-out set for final evaluation
+  random_seed: 42
+  cache_dir: ".cache/dspy"    # Cache LLM calls to save money

@@ -1,0 +1,35 @@
+# LLM Configuration for DSPy
+# Teacher models: Used during optimization (strong, expensive)
+# Student models: Used in production (cheaper, faster)
+
+teacher:
+  provider: "openai"
+  model: "gpt-4o"
+  temperature: 0.0
+  max_tokens: 2000
+
+student:
+  provider: "openai"
+  model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 1500
+
+# Alternative providers
+anthropic_teacher:
+  provider: "anthropic"
+  model: "claude-sonnet-4"
+  temperature: 0.0
+  max_tokens: 2000
+
+local_student:
+  provider: "ollama"
+  model: "llama3:8b"
+  temperature: 0.0
+  max_tokens: 1500
+
+# Evaluator model (LLM-as-Judge)
+evaluator:
+  provider: "openai"
+  model: "gpt-4o"
+  temperature: 0.3
+  max_tokens: 1000
