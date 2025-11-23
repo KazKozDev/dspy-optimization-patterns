@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-storage-pvc
+  namespace: dspy-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: dspy-production
+  labels:
+    app: qdrant
+spec:
+  serviceName: qdrant-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+    spec:
+      containers:
+      - name: qdrant
+        image: qdrant/qdrant:latest
+        ports:
+        - containerPort: 6333
+          name: rest
+        - containerPort: 6334
+          name: grpc
+        volumeMounts:
+        - name: qdrant-storage
+          mountPath: /qdrant/storage
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 6333
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 6333
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: qdrant-storage
+        persistentVolumeClaim:
+          claimName: qdrant-storage-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant-service
+  namespace: dspy-production
+  labels:
+    app: qdrant
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6333
+    targetPort: 6333
+    protocol: TCP
+    name: rest
+  - port: 6334
+    targetPort: 6334
+    protocol: TCP
+    name: grpc
+  selector:
+    app: qdrant

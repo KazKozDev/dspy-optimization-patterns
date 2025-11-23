@@ -476,8 +476,173 @@ mipro_program = optimize_with_mipro(module, trainset, devset)
 # Use best one in production
 ```
 
+## 🗄️ Vector Database Integration
+
+Support for multiple vector DB providers for production RAG:
+
+### Qdrant (Recommended for Production)
+
+```python
+from src.integrations.vector_db import create_retriever
+
+# Create retriever
+retriever = create_retriever(
+    provider="qdrant",
+    host="localhost",
+    port=6333,
+    collection_name="documents"
+)
+
+# Ingest documents
+retriever.upsert(
+    texts=["Document 1...", "Document 2..."],
+    metadata=[{"source": "web"}, {"source": "pdf"}]
+)
+
+# Search
+results = retriever.search("What is DSPy?", top_k=5)
+```
+
+### Supported Providers
+
+- **Qdrant** - Open-source, self-hosted, high performance
+- **Pinecone** - Managed service, auto-scaling
+- **Chroma** - Lightweight, perfect for development
+
+### Using with RAG
+
+```python
+from src.core.modules import SimpleRAG
+
+rag = SimpleRAG()
+rag.load_compiled_state("artifacts/compiled_programs/rag_v1.json")
+
+# Create retriever function
+def retriever_fn(query: str):
+    results = retriever.search(query, top_k=5)
+    return [r.text for r in results]
+
+# Run RAG
+result = rag.forward(
+    question="How does DSPy work?",
+    retriever_fn=retriever_fn
+)
+```
+
+## 🐳 Local Development with Docker Compose
+
+Complete development environment with one command:
+
+```bash
+# Start everything: API + Qdrant + Phoenix
+docker-compose up -d
+
+# Start with observability
+docker-compose --profile observability up -d
+
+# Start Jupyter for experimentation
+docker-compose --profile development up jupyter
+
+# View logs
+docker-compose logs -f api
+
+# Stop everything
+docker-compose down
+```
+
+Services included:
+- **API**: FastAPI server on :8000
+- **Qdrant**: Vector DB on :6333
+- **Phoenix**: Observability on :6006
+- **Jupyter**: Notebooks on :8888
+
+## ☸️ Production Kubernetes Deployment
+
+Full K8s manifests included in `k8s/`:
+
+```bash
+# Quick deploy
+kubectl apply -f k8s/
+
+# Or step-by-step
+kubectl apply -f k8s/deployment.yaml  # API deployment
+kubectl apply -f k8s/qdrant.yaml      # Vector DB
+
+# Check status
+kubectl get all -n dspy-production
+
+# Scale
+kubectl scale deployment dspy-api --replicas=10 -n dspy-production
+```
+
+Features:
+- Horizontal autoscaling (HPA)
+- Health checks and rolling updates
+- Persistent storage for artifacts and vector DB
+- Ingress with TLS support
+- Resource limits and requests
+- Multi-replica deployment
+
+See [k8s/README.md](k8s/README.md) for complete guide.
+
+## 🔄 CI/CD Pipeline
+
+GitHub Actions workflow included (`.github/workflows/ci.yml`):
+
+**On every push:**
+- Linting (Ruff + Black)
+- Type checking (MyPy)
+- Unit tests with coverage
+- Docker build test
+- Security scan (Trivy)
+
+**On main branch:**
+- Build and push Docker image
+- Deploy to staging environment
+- Run integration tests
+
+Customize for your needs!
+
+## 📝 Example Scripts
+
+Quick start examples in `examples/`:
+
+```bash
+# Basic usage
+python examples/01_basic_usage.py
+
+# Full optimization workflow
+python examples/02_optimization_workflow.py
+
+# RAG with vector DB
+python examples/03_rag_with_vector_db.py
+```
+
+Helper scripts in `scripts/`:
+
+```bash
+# Prepare data
+python scripts/prepare_data.py \
+  --input data/raw/qa_dataset_sample.jsonl \
+  --task-type qa
+
+# Quick optimization
+./scripts/optimize_model.sh SimpleRAG data/processed/qa_dataset.jsonl qa
+```
+
+## 📊 Sample Datasets
+
+Production-quality datasets included in `data/raw/`:
+
+- **qa_dataset_sample.jsonl** - 20 Q&A pairs about DSPy (with context)
+- **classification_dataset_sample.jsonl** - 20 tech/business/science articles
+- **rag_dataset_sample.jsonl** - 10 complex RAG examples with contexts
+
+All ready to use for optimization!
+
 ## 📚 Resources
 
+- [Quick Start Guide](QUICKSTART.md) - Get running in 5 minutes
 - [DSPy Documentation](https://dspy-docs.vercel.app/)
 - [DSPy GitHub](https://github.com/stanfordnlp/dspy)
 - [Arize Phoenix](https://github.com/Arize-ai/phoenix)

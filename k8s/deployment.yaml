@@ -1,0 +1,186 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dspy-production
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dspy-config
+  namespace: dspy-production
+data:
+  STUDENT_MODEL: "gpt-4o-mini"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  QDRANT_HOST: "qdrant-service"
+  QDRANT_PORT: "6333"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dspy-secrets
+  namespace: dspy-production
+type: Opaque
+stringData:
+  OPENAI_API_KEY: "your-openai-key-here"  # Replace with actual secret management
+  ANTHROPIC_API_KEY: "your-anthropic-key-here"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dspy-artifacts-pvc
+  namespace: dspy-production
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard  # Adjust based on your cluster
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dspy-api
+  namespace: dspy-production
+  labels:
+    app: dspy-api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dspy-api
+  template:
+    metadata:
+      labels:
+        app: dspy-api
+        version: v1
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/your-org/dspy-api:latest  # Replace with your image
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dspy-secrets
+              key: OPENAI_API_KEY
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dspy-secrets
+              key: ANTHROPIC_API_KEY
+        envFrom:
+        - configMapRef:
+            name: dspy-config
+        volumeMounts:
+        - name: artifacts
+          mountPath: /app/artifacts
+          readOnly: true
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: artifacts
+        persistentVolumeClaim:
+          claimName: dspy-artifacts-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dspy-api-service
+  namespace: dspy-production
+  labels:
+    app: dspy-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: dspy-api
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dspy-api-hpa
+  namespace: dspy-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dspy-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dspy-api-ingress
+  namespace: dspy-production
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+  - hosts:
+    - api.dspy-production.example.com
+    secretName: dspy-api-tls
+  rules:
+  - host: api.dspy-production.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dspy-api-service
+            port:
+              number: 80
