@@ -64,7 +64,7 @@ python scripts/prepare_data.py \
 import dspy
 
 # Configure
-lm = dspy.LM(model="openai/gpt-4o-mini")
+lm = dspy.LM(model="openai/gpt-5o-mini")
 dspy.settings.configure(lm=lm)
 
 # Create predictor

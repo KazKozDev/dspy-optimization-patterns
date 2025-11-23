@@ -35,7 +35,7 @@ metadata = [{"source": f"doc_{i}"} for i in range(len(documents))]
 retriever.upsert(documents, metadata)
 
 # 3. Configure LLM
-lm = dspy.LM(model="openai/gpt-4o-mini", temperature=0.0)
+lm = dspy.LM(model="openai/gpt-5o-mini", temperature=0.0)
 dspy.settings.configure(lm=lm)
 
 # 4. Create RAG module

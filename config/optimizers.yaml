@@ -22,8 +22,8 @@ mipro:
 # Signature Optimizer (for refining input/output descriptions)
 signature_opt:
   type: "SignatureOptimizer"
-  prompt_model: "gpt-4o"      # Model for generating better descriptions
-  task_model: "gpt-4o-mini"   # Model for testing variations
+  prompt_model: "gpt-5o"          # Model for generating better descriptions
+  task_model: "gpt-5o-mini"       # Model for testing variations
   max_iterations: 5
 
 # Optimization run settings

@@ -238,11 +238,11 @@ class CostTracker:
     - Detecting expensive queries
     """
 
-    # Pricing per 1M tokens (as of 2024)
+    # Pricing per 1M tokens (as of 2025)
     PRICING = {
-        "gpt-4o": {"input": 2.5, "output": 10.0},
-        "gpt-4o-mini": {"input": 0.15, "output": 0.6},
-        "claude-sonnet-4": {"input": 3.0, "output": 15.0},
+        "gpt-5o": {"input": 2.0, "output": 8.0},
+        "gpt-5o-mini": {"input": 0.10, "output": 0.5},
+        "claude-sonnet-5": {"input": 2.5, "output": 12.0},
         "claude-haiku-3.5": {"input": 0.8, "output": 4.0},
     }
 

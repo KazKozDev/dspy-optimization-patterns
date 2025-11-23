@@ -98,7 +98,7 @@ async def lifespan(app: FastAPI):
         print("⚠️  Warning: OPENAI_API_KEY not set. API calls will fail.")
 
     # 3. Initialize student model (production model)
-    student_model = os.getenv("STUDENT_MODEL", "gpt-4o-mini")
+    student_model = os.getenv("STUDENT_MODEL", "gpt-5o-mini")
     state.lm = dspy.LM(
         model=f"openai/{student_model}",
         temperature=0.0,

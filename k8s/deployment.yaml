@@ -10,7 +10,7 @@ metadata:
   name: dspy-config
   namespace: dspy-production
 data:
-  STUDENT_MODEL: "gpt-4o-mini"
+  STUDENT_MODEL: "gpt-5o-mini"
   ENVIRONMENT: "production"
   LOG_LEVEL: "INFO"
   QDRANT_HOST: "qdrant-service"

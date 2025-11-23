@@ -13,7 +13,7 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - STUDENT_MODEL=gpt-4o-mini
+      - STUDENT_MODEL=gpt-5o-mini
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - ENVIRONMENT=development

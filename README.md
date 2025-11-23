@@ -145,7 +145,7 @@ def rag_quality_metric(example: dspy.Example, prediction: dspy.Prediction) -> fl
 **Metric Types:**
 - **Heuristic**: Exact match, substring match (fast, brittle)
 - **Semantic**: Embedding similarity (robust, moderate cost)
-- **LLM-as-Judge**: Use GPT-4o to evaluate (flexible, expensive)
+- **LLM-as-Judge**: Use GPT-5o to evaluate (flexible, expensive, best quality)
 - **Hybrid**: Combine multiple metrics (recommended)
 
 ### Pipeline (`src/pipeline/`)
@@ -188,7 +188,7 @@ compiled_module, dev_score, test_score = pipeline.run(
 
 ### What Happens During Compilation?
 
-1. **Teacher Model** (GPT-4o) generates high-quality examples on training set
+1. **Teacher Model** (GPT-5o) generates high-quality examples on training set
 2. **Optimizer** tries different:
    - Instruction phrasings
    - Few-shot example combinations
@@ -204,15 +204,15 @@ compiled_module, dev_score, test_score = pipeline.run(
 ```yaml
 # config/models.yaml
 teacher:
-  model: "gpt-4o"        # Strong, expensive - for optimization
+  model: "gpt-5o"        # Next-gen model - for optimization
 
 student:
-  model: "gpt-4o-mini"   # Weaker, cheap - for production
+  model: "gpt-5o-mini"   # Cost-effective - for production
 ```
 
 **Cost Savings Example:**
-- Optimization (one-time): $5 using GPT-4o teacher
-- Production (per request): $0.001 using GPT-4o-mini student
+- Optimization (one-time): $5 using GPT-5o teacher
+- Production (per request): $0.0001 using gpt-5o-mini student
 - **ROI**: After 5000 requests, you've broken even
 
 ## 🌐 API Usage
@@ -285,7 +285,7 @@ from src.utils.tracing import CostTracker
 
 tracker = CostTracker()
 tracker.log_call(
-    model="gpt-4o-mini",
+    model="gpt-5o-mini",
     input_tokens=500,
     output_tokens=200
 )
@@ -405,18 +405,23 @@ kubectl rollout restart deployment/dspy-api
 ```yaml
 teacher:
   provider: "openai"
-  model: "gpt-4o"
+  model: "gpt-5o"  # Next-generation model
   temperature: 0.0
 
 student:
   provider: "openai"
-  model: "gpt-4o-mini"
+  model: "gpt-5o-mini"  # Cost-effective
   temperature: 0.0
+
+# Alternative configurations
+gpt5o_teacher:
+  provider: "openai"
+  model: "gpt-5o-2025-01-20"
 
 # Or use Anthropic
 anthropic_teacher:
   provider: "anthropic"
-  model: "claude-sonnet-4"
+  model: "claude-sonnet-5"
 ```
 
 ### Optimizer Configuration (`config/optimizers.yaml`)
