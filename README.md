@@ -421,7 +421,7 @@ gpt5o_teacher:
 # Or use Anthropic
 anthropic_teacher:
   provider: "anthropic"
-  model: "claude-sonnet-5"
+  model: "claude-sonnet-4.5"
 ```
 
 ### Optimizer Configuration (`config/optimizers.yaml`)

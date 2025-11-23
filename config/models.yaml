@@ -23,7 +23,7 @@ gpt5o_teacher:
 
 anthropic_teacher:
   provider: "anthropic"
-  model: "claude-sonnet-5"
+  model: "claude-sonnet-4.5"
   temperature: 0.0
   max_tokens: 2000
 
