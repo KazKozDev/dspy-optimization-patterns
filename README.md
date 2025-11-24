@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="300" height="" alt="logog" src="https://github.com/user-attachments/assets/a82845a4-511b-4203-b931-950463d64b6d" />
+  <img width="260" height="" alt="logog" src="https://github.com/user-attachments/assets/a82845a4-511b-4203-b931-950463d64b6d" />
   <br>  <br>
   <b> DSPy Production Framework</b>
 </p>
