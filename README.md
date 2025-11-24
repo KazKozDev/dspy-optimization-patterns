@@ -590,21 +590,10 @@ All datasets ready for optimization.
 - [Arize Phoenix](https://github.com/Arize-ai/phoenix)
 - [Paper: DSPy - Compiling Declarative Language Model Calls](https://arxiv.org/abs/2310.03714)
 
-## Contributing
+---
 
-1. Fork repository
-2. Create feature branch: `git checkout -b feature/name`
-3. Make changes and test: `make test`
-4. Format code: `make format`
-5. Commit: `git commit -m 'Add feature'`
-6. Push and open PR
+If you like this project, please give it a star ⭐
 
-## License
+For questions, feedback, or support, reach out to:
 
-MIT License. See LICENSE file for details.
-
-## Acknowledgments
-
-- DSPy team at Stanford
-- Arize for Phoenix observability
-- Open-source community
+[Artem KK](https://www.linkedin.com/in/kazkozdev/) | MIT [LICENSE](LICENSE)
