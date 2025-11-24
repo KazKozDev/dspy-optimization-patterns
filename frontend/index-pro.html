@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSPy Enterprise Platform</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --primary: #0066CC;
+            --primary-dark: #004C99;
+            --primary-light: #3399FF;
+            --secondary: #2C3E50;
+            --secondary-light: #34495E;
+            --accent: #00A8E8;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --gray-50: #F8F9FA;
+            --gray-100: #F1F3F5;
+            --gray-200: #E9ECEF;
+            --gray-300: #DEE2E6;
+            --gray-400: #CED4DA;
+            --gray-500: #ADB5BD;
+            --gray-600: #6C757D;
+            --gray-700: #495057;
+            --gray-800: #343A40;
+            --gray-900: #212529;
+            --white: #FFFFFF;
+            --border-radius: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--secondary);
+            padding: 0;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            background: var(--secondary-light);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-section {
+            margin: 16px 0;
+        }
+
+        .sidebar-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            margin: 0 20px 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+            display: block;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--white);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 102, 204, 0.15);
+            border-left-color: var(--primary);
+            color: var(--white);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .header-bar {
+            background: var(--white);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 14px;
+            background: var(--gray-100);
+            border-radius: var(--border-radius);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .status-badge.healthy {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-400);
+        }
+
+        .status-indicator.healthy {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .content-wrapper {
+            padding: 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .card-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-badge.primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .card-badge.success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 13px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.15s ease;
+            background: var(--white);
+            color: var(--gray-900);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--gray-900);
+            color: #10B981;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            line-height: 1.6;
+            border: 1px solid var(--gray-800);
+        }
+
+        .code-block-light {
+            background: var(--gray-100);
+            color: var(--gray-900);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            line-height: 1.6;
+            border: 1px solid var(--gray-300);
+        }
+
+        /* Info Blocks */
+        .info-block {
+            background: var(--gray-50);
+            padding: 14px;
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--primary);
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--gray-700);
+        }
+
+        .info-block strong {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* History Items */
+        .history-item {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            border-left: 3px solid var(--primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid var(--gray-200);
+        }
+
+        .history-item:hover {
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+            transform: translateX(4px);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-type {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .history-preview {
+            font-size: 14px;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .history-metrics {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+
+        /* Artifact Items */
+        .artifact-item {
+            background: var(--white);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            border: 2px solid var(--gray-200);
+            margin-bottom: 12px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .artifact-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .artifact-item.active {
+            border-color: var(--primary);
+            background: rgba(0, 102, 204, 0.03);
+        }
+
+        .artifact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .artifact-name {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-size: 14px;
+        }
+
+        .artifact-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--primary);
+            color: var(--white);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .artifact-meta {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        /* Results Section */
+        .result-section {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .result-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--gray-800);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .metric-box {
+            background: var(--white);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid var(--gray-200);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: var(--gray-600);
+            border-bottom: 3px solid transparent;
+            transition: all 0.15s ease;
+            font-size: 14px;
+        }
+
+        .tab:hover {
+            color: var(--gray-900);
+            background: var(--gray-50);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 14px 18px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .alert-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #93C5FD;
+        }
+
+        .alert-success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #6EE7B7;
+        }
+
+        .alert-warning {
+            background: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FCD34D;
+        }
+
+        .alert-danger {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--gray-300);
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .empty-state-description {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-top: 8px;
+        }
+
+        /* Spinner */
+        .spinner {
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .badge-danger {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Log Entry */
+        .log-entry {
+            padding: 10px 14px;
+            background: var(--white);
+            border-left: 3px solid var(--primary);
+            margin-bottom: 8px;
+            border-radius: var(--border-radius);
+            font-size: 13px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            border: 1px solid var(--gray-200);
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-card {
+            background: var(--gray-50);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 2px solid var(--gray-200);
+        }
+
+        .comparison-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gray-200);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-title.unoptimized {
+            color: var(--warning);
+        }
+
+        .comparison-title.optimized {
+            color: var(--success);
+        }
+
+        .comparison-content {
+            font-size: 13px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+            color: var(--gray-700);
+            white-space: pre-wrap;
+        }
+
+        /* Flow Steps */
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .flow-step {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .flow-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .flow-content {
+            flex: 1;
+        }
+
+        .flow-title {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .flow-description {
+            font-size: 14px;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 16px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .feature-description {
+            font-size: 13px;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+
+        /* Signature Display */
+        .signature-display {
+            background: var(--gray-900);
+            color: #10B981;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            line-height: 1.6;
+            border: 1px solid var(--gray-800);
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_BASE = 'http://localhost:8000';
+
+        // Utility functions
+        const saveToHistory = (type, data) => {
+            const history = JSON.parse(localStorage.getItem('dspy_history') || '[]');
+            const entry = {
+                id: Date.now(),
+                type,
+                timestamp: new Date().toISOString(),
+                data
+            };
+            history.unshift(entry);
+            if (history.length > 100) history.pop();
+            localStorage.setItem('dspy_history', JSON.stringify(history));
+            return entry;
+        };
+
+        const getHistory = () => {
+            return JSON.parse(localStorage.getItem('dspy_history') || '[]');
+        };
+
+        const clearHistory = () => {
+            localStorage.setItem('dspy_history', '[]');
+        };
+
+        const getSettings = () => {
+            return JSON.parse(localStorage.getItem('dspy_settings') || JSON.stringify({
+                model: 'gpt-5-mini',
+                temperature: 0.0,
+                maxTokens: 1500,
+                optimizer: 'MIPRO',
+                maxFewShot: 3
+            }));
+        };
+
+        const saveSettings = (settings) => {
+            localStorage.setItem('dspy_settings', JSON.stringify(settings));
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [apiStatus, setApiStatus] = useState('unknown');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+            const [history, setHistory] = useState([]);
+            const [artifacts, setArtifacts] = useState([]);
+            const [selectedArtifact, setSelectedArtifact] = useState(null);
+            const [settings, setSettings] = useState(getSettings());
+
+            // Form states
+            const [question, setQuestion] = useState('');
+            const [context, setContext] = useState('');
+            const [ragQuestion, setRagQuestion] = useState('');
+            const [classifyText, setClassifyText] = useState('');
+
+            useEffect(() => {
+                checkAPIStatus();
+                loadHistory();
+                loadArtifacts();
+                const interval = setInterval(checkAPIStatus, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            const checkAPIStatus = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/health`);
+                    if (response.ok) {
+                        setApiStatus('healthy');
+                    } else {
+                        setApiStatus('error');
+                    }
+                } catch (error) {
+                    setApiStatus('offline');
+                }
+            };
+
+            const loadHistory = () => {
+                setHistory(getHistory());
+            };
+
+            const loadArtifacts = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/artifacts`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const formattedArtifacts = data.artifacts.map(a => ({
+                            name: a.name,
+                            type: a.type,
+                            date: new Date(a.modified * 1000).toLocaleDateString(),
+                            active: a.active,
+                            size_kb: a.size_kb
+                        }));
+                        setArtifacts(formattedArtifacts);
+                    }
+                } catch (error) {
+                    console.error('Error loading artifacts:', error);
+                    setArtifacts([]);
+                }
+            };
+
+            const handleQA = async () => {
+                if (!question || !context) {
+                    alert('Please fill in both question and context');
+                    return;
+                }
+
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_BASE}/qa`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question, context })
+                    });
+                    const data = await response.json();
+                    setResult({ success: response.ok, data });
+                    saveToHistory('QA', { question, context, result: data });
+                    loadHistory();
+                } catch (error) {
+                    setResult({ success: false, data: { error: error.message } });
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleRAG = async () => {
+                if (!ragQuestion) {
+                    alert('Please enter a question');
+                    return;
+                }
+
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_BASE}/rag`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            question: ragQuestion,
+                            top_k: 3,
+                            conversation_history: ''
+                        })
+                    });
+                    const data = await response.json();
+                    setResult({ success: response.ok, data });
+                    saveToHistory('RAG', { question: ragQuestion, result: data });
+                    loadHistory();
+                } catch (error) {
+                    setResult({ success: false, data: { error: error.message } });
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleClassify = async () => {
+                if (!classifyText) {
+                    alert('Please enter text to classify');
+                    return;
+                }
+
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_BASE}/classify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: classifyText })
+                    });
+                    const data = await response.json();
+                    setResult({ success: response.ok, data });
+                    saveToHistory('Classification', { text: classifyText, result: data });
+                    loadHistory();
+                } catch (error) {
+                    setResult({ success: false, data: { error: error.message } });
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleSaveSettings = () => {
+                saveSettings(settings);
+                alert('Settings saved successfully');
+            };
+
+            const handleClearHistory = () => {
+                if (confirm('Are you sure you want to clear all history?')) {
+                    clearHistory();
+                    loadHistory();
+                }
+            };
+
+            const loadHistoryItem = (item) => {
+                if (item.type === 'QA') {
+                    setQuestion(item.data.question);
+                    setContext(item.data.context);
+                    setResult({ success: true, data: item.data.result });
+                    setActiveTab('testing');
+                } else if (item.type === 'RAG') {
+                    setRagQuestion(item.data.question);
+                    setResult({ success: true, data: item.data.result });
+                    setActiveTab('testing');
+                } else if (item.type === 'Classification') {
+                    setClassifyText(item.data.text);
+                    setResult({ success: true, data: item.data.result });
+                    setActiveTab('testing');
+                }
+            };
+
+            const handleActivateArtifact = async (artifactName) => {
+                try {
+                    const response = await fetch(`${API_BASE}/artifacts/${artifactName}/activate`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert(`Successfully activated: ${data.message}`);
+                        loadArtifacts();
+                        checkAPIStatus();
+                    } else {
+                        alert(`Error: ${data.detail}`);
+                    }
+                } catch (error) {
+                    alert(`Error activating artifact: ${error.message}`);
+                }
+            };
+
+            const renderDashboard = () => {
+                const stats = {
+                    totalRequests: history.length,
+                    avgLatency: history.length > 0
+                        ? Math.round(history.reduce((acc, h) => acc + (h.data.result?.execution_time_ms || 0), 0) / history.length)
+                        : 0,
+                    activeArtifacts: artifacts.filter(a => a.active).length,
+                    successRate: history.length > 0
+                        ? Math.round((history.filter(h => h.data.result?.answer || h.data.result?.category).length / history.length) * 100)
+                        : 0
+                };
+
+                return (
+                    <div className="content-wrapper">
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-label">Total Requests</div>
+                                <div className="stat-value">{stats.totalRequests}</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-label">Avg Latency</div>
+                                <div className="stat-value">{stats.avgLatency}<span style={{fontSize: '18px', color: 'var(--gray-500)'}}>ms</span></div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-label">Active Models</div>
+                                <div className="stat-value">{stats.activeArtifacts}</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-label">Success Rate</div>
+                                <div className="stat-value">{stats.successRate}<span style={{fontSize: '18px', color: 'var(--gray-500)'}}>%</span></div>
+                            </div>
+                        </div>
+
+                        <div className="content-grid">
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Recent Activity</h2>
+                                </div>
+                                {history.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="empty-state-text">No activity yet</div>
+                                        <div className="empty-state-description">Start testing modules to see activity</div>
+                                    </div>
+                                ) : (
+                                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        {history.slice(0, 5).map(item => (
+                                            <div key={item.id} className="history-item" onClick={() => loadHistoryItem(item)}>
+                                                <div className="history-header">
+                                                    <span className="history-type">{item.type}</span>
+                                                    <span className="history-time">
+                                                        {new Date(item.timestamp).toLocaleTimeString()}
+                                                    </span>
+                                                </div>
+                                                <div className="history-preview">
+                                                    {item.type === 'QA' && item.data.question}
+                                                    {item.type === 'RAG' && item.data.question}
+                                                    {item.type === 'Classification' && item.data.text?.substring(0, 60) + '...'}
+                                                </div>
+                                                {item.data.result?.execution_time_ms && (
+                                                    <div className="history-metrics">
+                                                        <span>{Math.round(item.data.result.execution_time_ms)}ms</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Active Models</h2>
+                                </div>
+                                {artifacts.filter(a => a.active).length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="empty-state-text">No active models</div>
+                                        <div className="empty-state-description">Run optimization to create models</div>
+                                    </div>
+                                ) : (
+                                    artifacts.filter(a => a.active).map((artifact, idx) => (
+                                        <div key={idx} className="artifact-item active">
+                                            <div className="artifact-header">
+                                                <span className="artifact-name">{artifact.name}</span>
+                                                <span className="artifact-badge">ACTIVE</span>
+                                            </div>
+                                            <div className="artifact-meta">
+                                                {artifact.type} • {artifact.date}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <div className="card full-width">
+                                <div className="card-header">
+                                    <h2 className="card-title">Platform Overview</h2>
+                                </div>
+                                <div className="alert alert-info">
+                                    <strong>DSPy Enterprise Platform:</strong> A production-ready framework for building, optimizing, and deploying LLM-based applications. Use this platform to test modules, manage compiled programs, and monitor performance.
+                                </div>
+                                <div className="feature-grid">
+                                    <div className="feature-item">
+                                        <div className="feature-title">Automatic Optimization</div>
+                                        <div className="feature-description">DSPy automatically optimizes prompts and few-shot examples from your training data</div>
+                                    </div>
+                                    <div className="feature-item">
+                                        <div className="feature-title">Hot-Swap Models</div>
+                                        <div className="feature-description">Switch between compiled program versions without restarting the API</div>
+                                    </div>
+                                    <div className="feature-item">
+                                        <div className="feature-title">Performance Tracking</div>
+                                        <div className="feature-description">Monitor latency, success rates, and request volumes in real-time</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderTesting = () => (
+                <div className="content-wrapper">
+                    <div className="content-grid">
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Question Answering</h2>
+                                <span className="card-badge primary">QA</span>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Question</label>
+                                <input
+                                    className="form-input"
+                                    type="text"
+                                    value={question}
+                                    onChange={(e) => setQuestion(e.target.value)}
+                                    placeholder="What is DSPy?"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Context</label>
+                                <textarea
+                                    className="form-textarea"
+                                    value={context}
+                                    onChange={(e) => setContext(e.target.value)}
+                                    placeholder="DSPy is a framework for programming with language models..."
+                                />
+                            </div>
+                            <button className="btn btn-primary" onClick={handleQA} disabled={loading}>
+                                {loading ? <><span className="spinner"></span> Processing</> : 'Run Test'}
+                            </button>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">RAG Search</h2>
+                                <span className="card-badge primary">RAG</span>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Question</label>
+                                <input
+                                    className="form-input"
+                                    type="text"
+                                    value={ragQuestion}
+                                    onChange={(e) => setRagQuestion(e.target.value)}
+                                    placeholder="How does DSPy optimization work?"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Top K Results</label>
+                                <input className="form-input" type="number" defaultValue="3" min="1" max="10" />
+                            </div>
+                            <button className="btn btn-primary" onClick={handleRAG} disabled={loading}>
+                                {loading ? <><span className="spinner"></span> Processing</> : 'Run Test'}
+                            </button>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Classification</h2>
+                                <span className="card-badge primary">CLASSIFY</span>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Text to Classify</label>
+                                <textarea
+                                    className="form-textarea"
+                                    value={classifyText}
+                                    onChange={(e) => setClassifyText(e.target.value)}
+                                    placeholder="This is a research paper about machine learning..."
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Categories</label>
+                                <input className="form-input" type="text" value="research, news, tutorial, opinion, other" disabled />
+                            </div>
+                            <button className="btn btn-primary" onClick={handleClassify} disabled={loading}>
+                                {loading ? <><span className="spinner"></span> Processing</> : 'Run Test'}
+                            </button>
+                        </div>
+
+                        {result && (
+                            <div className="card full-width">
+                                <div className="card-header">
+                                    <h2 className="card-title">{result.success ? 'Test Results' : 'Error'}</h2>
+                                    <span className={`badge ${result.success ? 'badge-success' : 'badge-danger'}`}>
+                                        {result.success ? 'SUCCESS' : 'ERROR'}
+                                    </span>
+                                </div>
+
+                                {result.success ? (
+                                    <>
+                                        <div className="result-section">
+                                            <h3 className="result-section-title">Output</h3>
+                                            <div className="result-content">
+                                                {result.data.answer || result.data.category || 'No result'}
+                                            </div>
+                                        </div>
+
+                                        {result.data.reasoning && (
+                                            <div className="result-section">
+                                                <h3 className="result-section-title">Reasoning</h3>
+                                                <div className="result-content">{result.data.reasoning}</div>
+                                            </div>
+                                        )}
+
+                                        {result.data.search_query && (
+                                            <div className="result-section">
+                                                <h3 className="result-section-title">Generated Search Query</h3>
+                                                <div className="code-block">{result.data.search_query}</div>
+                                            </div>
+                                        )}
+
+                                        {result.data.sources && (
+                                            <div className="result-section">
+                                                <h3 className="result-section-title">Retrieved Sources</h3>
+                                                {result.data.sources.map((source, idx) => (
+                                                    <div key={idx} className="info-block">{source}</div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {result.data.execution_time_ms && (
+                                            <div className="metrics-grid">
+                                                <div className="metric-box">
+                                                    <div className="metric-label">Total Time</div>
+                                                    <div className="metric-value">{Math.round(result.data.execution_time_ms)}</div>
+                                                </div>
+                                                {result.data.retrieval_time_ms && (
+                                                    <div className="metric-box">
+                                                        <div className="metric-label">Retrieval</div>
+                                                        <div className="metric-value">{Math.round(result.data.retrieval_time_ms)}</div>
+                                                    </div>
+                                                )}
+                                                <div className="metric-box">
+                                                    <div className="metric-label">Model</div>
+                                                    <div className="metric-value" style={{fontSize: '14px'}}>
+                                                        {result.data.model_version || 'v1'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {result.data.logs && result.data.logs.length > 0 && (
+                                            <div className="result-section" style={{marginTop: '16px'}}>
+                                                <h3 className="result-section-title">Execution Log</h3>
+                                                {result.data.logs.map((log, idx) => (
+                                                    <div key={idx} className="log-entry">{log}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="alert alert-danger">
+                                        <strong>Error:</strong> {result.data.error || 'Unknown error occurred'}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const renderLearn = () => (
+                <div className="content-wrapper">
+                    <div className="card full-width">
+                        <div className="card-header">
+                            <h2 className="card-title">What DSPy Automatically Optimizes</h2>
+                        </div>
+                        <div className="info-block">
+                            <strong>The Challenge:</strong> You have a task. Instead of manually writing 50+ prompts and testing them one by one, DSPy automatically finds the best combination of instructions, examples, and reasoning patterns.
+                        </div>
+                        <div className="feature-grid">
+                            <div className="feature-item">
+                                <div className="feature-title">Instructions</div>
+                                <div className="feature-description">How to frame the task, what to emphasize, style and tone</div>
+                            </div>
+                            <div className="feature-item">
+                                <div className="feature-title">Examples</div>
+                                <div className="feature-description">Which training examples to use as few-shot demonstrations</div>
+                            </div>
+                            <div className="feature-item">
+                                <div className="feature-title">Reasoning Patterns</div>
+                                <div className="feature-description">Whether to use chain-of-thought, intermediate steps, etc.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <div className="card-header">
+                            <h2 className="card-title">Before & After Optimization</h2>
+                        </div>
+                        <div className="comparison-grid">
+                            <div className="comparison-card">
+                                <div className="comparison-title unoptimized">Unoptimized (Manual)</div>
+                                <div className="comparison-content">{`Answer the question based on context:
+
+Context: {context}
+Question: {question}
+Answer:`}</div>
+                            </div>
+                            <div className="comparison-card">
+                                <div className="comparison-title optimized">Optimized (DSPy)</div>
+                                <div className="comparison-content">{`Carefully analyze the provided context to answer the question accurately. Consider all relevant details and explain your reasoning before providing a direct answer.
+
+Examples of good answers:
+Q: {example_q}
+A: {example_a}
+
+Now answer:
+Context: {context}
+Question: {question}
+Reasoning:
+Answer:`}</div>
+                            </div>
+                        </div>
+                        <div className="info-block" style={{marginTop: '20px'}}>
+                            <strong>What Changed:</strong> The optimized version includes better task framing, selected examples from your training data, and asks for intermediate reasoning.
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <div className="card-header">
+                            <h2 className="card-title">How Optimization Works</h2>
+                        </div>
+                        <div className="flow-steps">
+                            <div className="flow-step">
+                                <div className="flow-number">1</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Define Your Task</div>
+                                    <div className="flow-description">
+                                        Create a signature describing inputs and outputs. For example, a GenerateAnswer signature that takes context + question and produces an answer.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">2</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Create a Predictor</div>
+                                    <div className="flow-description">
+                                        Wrap your signature in dspy.ChainOfThought() or dspy.Predict(). This is your base module that will be optimized.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">3</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Define a Metric</div>
+                                    <div className="flow-description">
+                                        Write a function that measures quality: exact_match, F1 score, semantic similarity, etc. DSPy uses this to evaluate different prompts.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">4</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Run Optimization</div>
+                                    <div className="flow-description">
+                                        DSPy's BootstrapFewShot or MIPRO optimizer automatically tries different prompts and example combinations on your training data.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">5</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Get Compiled Program</div>
+                                    <div className="flow-description">
+                                        The result is a compiled module with optimized prompts and few-shot examples baked in. Deploy this to production.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="content-grid">
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Signature: GenerateAnswer</h2>
+                                <span className="card-badge success">CORE</span>
+                            </div>
+                            <div className="section-title">Purpose</div>
+                            <div className="info-block">Generates answers to questions given context</div>
+                            <div className="section-title">Input Fields</div>
+                            <div className="info-block"><strong>context:</strong> Relevant text to base answer on</div>
+                            <div className="info-block"><strong>question:</strong> The question to answer</div>
+                            <div className="section-title">Output Fields</div>
+                            <div className="info-block"><strong>answer:</strong> Direct answer to the question</div>
+                            <div className="signature-display">{`class GenerateAnswer(dspy.Signature):
+    context = dspy.InputField(
+        desc="may contain relevant facts")
+    question = dspy.InputField()
+    answer = dspy.OutputField(
+        desc="often between 1-5 words")`}</div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Module: SimpleRAG</h2>
+                                <span className="card-badge success">MODULE</span>
+                            </div>
+                            <div className="section-title">Execution Flow</div>
+                            <div className="info-block">
+                                1. Generate optimized search query<br/>
+                                2. Retrieve relevant documents<br/>
+                                3. Generate answer from retrieved context
+                            </div>
+                            <div className="section-title">Optimizable Components</div>
+                            <div className="info-block">GenerateSearchQuery - learns to rephrase questions</div>
+                            <div className="info-block">GenerateAnswer - learns citation and formatting</div>
+                            <div className="code-block-light">{`class SimpleRAG(dspy.Module):
+    def __init__(self):
+        self.generate_query = dspy.ChainOfThought(
+            GenerateSearchQuery)
+        self.generate_answer = dspy.ChainOfThought(
+            GenerateAnswer)
+
+    def forward(self, question, retriever_fn):
+        query = self.generate_query(question)
+        docs = retriever_fn(query.search_query)
+        return self.generate_answer(
+            context=docs, question=question)`}</div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderHistory = () => (
+                <div className="content-wrapper">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--gray-900)' }}>
+                            Request History ({history.length})
+                        </h2>
+                        <button className="btn btn-secondary" onClick={handleClearHistory}>
+                            Clear History
+                        </button>
+                    </div>
+
+                    {history.length === 0 ? (
+                        <div className="card">
+                            <div className="empty-state">
+                                <div className="empty-state-text">No history yet</div>
+                                <div className="empty-state-description">
+                                    Start testing modules to build your request history
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="content-grid">
+                            {history.map(item => (
+                                <div key={item.id} className="card" onClick={() => loadHistoryItem(item)} style={{ cursor: 'pointer' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                        <span className="badge badge-info">{item.type}</span>
+                                        <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
+                                            {new Date(item.timestamp).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: 'var(--gray-800)', marginBottom: '12px', fontWeight: '500' }}>
+                                        {item.type === 'QA' ? item.data.question :
+                                         item.type === 'RAG' ? item.data.question :
+                                         item.data.text?.substring(0, 100) + '...'}
+                                    </div>
+                                    {item.data.result && (
+                                        <div style={{ fontSize: '13px', color: 'var(--gray-600)' }}>
+                                            {Math.round(item.data.result.execution_time_ms || 0)}ms
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+
+            const renderArtifacts = () => (
+                <div className="content-wrapper">
+                    <div className="alert alert-info">
+                        <strong>Compiled Programs:</strong> These are optimized DSPy modules ready for production. Switch between versions to A/B test performance.
+                    </div>
+
+                    <div className="content-grid">
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Available Artifacts</h2>
+                            </div>
+                            {artifacts.length === 0 ? (
+                                <div className="empty-state">
+                                    <div className="empty-state-text">No artifacts found</div>
+                                    <div className="empty-state-description">
+                                        Run <code>make optimize-rag</code> to create your first compiled program
+                                    </div>
+                                </div>
+                            ) : (
+                                artifacts.map((artifact, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`artifact-item ${artifact.active ? 'active' : ''}`}
+                                        onClick={() => setSelectedArtifact(artifact)}
+                                    >
+                                        <div className="artifact-header">
+                                            <span className="artifact-name">{artifact.name}</span>
+                                            {artifact.active && <span className="artifact-badge">ACTIVE</span>}
+                                        </div>
+                                        <div className="artifact-meta">
+                                            {artifact.type} • {artifact.date} • {artifact.size_kb} KB
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {selectedArtifact && (
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Artifact Details</h2>
+                                </div>
+                                <div className="result-section">
+                                    <h3 className="result-section-title">Name</h3>
+                                    <div className="result-content">{selectedArtifact.name}</div>
+                                </div>
+                                <div className="result-section">
+                                    <h3 className="result-section-title">Type</h3>
+                                    <div className="result-content">{selectedArtifact.type}</div>
+                                </div>
+                                <div className="result-section">
+                                    <h3 className="result-section-title">Created</h3>
+                                    <div className="result-content">{selectedArtifact.date}</div>
+                                </div>
+                                <div className="result-section">
+                                    <h3 className="result-section-title">Size</h3>
+                                    <div className="result-content">{selectedArtifact.size_kb} KB</div>
+                                </div>
+                                <div className="result-section">
+                                    <h3 className="result-section-title">Status</h3>
+                                    <span className={`badge ${selectedArtifact.active ? 'badge-success' : 'badge-warning'}`}>
+                                        {selectedArtifact.active ? 'ACTIVE' : 'INACTIVE'}
+                                    </span>
+                                </div>
+                                <button
+                                    className="btn btn-primary"
+                                    style={{ width: '100%', marginTop: '16px' }}
+                                    onClick={() => !selectedArtifact.active && handleActivateArtifact(selectedArtifact.name)}
+                                    disabled={selectedArtifact.active}
+                                >
+                                    {selectedArtifact.active ? 'Currently Active' : 'Activate This Version'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const renderSettings = () => (
+                <div className="content-wrapper">
+                    <div className="content-grid">
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Model Configuration</h2>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Model</label>
+                                <select
+                                    className="form-select"
+                                    value={settings.model}
+                                    onChange={(e) => setSettings({...settings, model: e.target.value})}
+                                >
+                                    <option value="gpt-5-mini">GPT-5 Mini (Production)</option>
+                                    <option value="gpt-5">GPT-5 (Teacher)</option>
+                                    <option value="claude-sonnet-4.5">Claude Sonnet 4.5</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Temperature ({settings.temperature})</label>
+                                <input
+                                    className="form-input"
+                                    type="range"
+                                    min="0"
+                                    max="2"
+                                    step="0.1"
+                                    value={settings.temperature}
+                                    onChange={(e) => setSettings({...settings, temperature: parseFloat(e.target.value)})}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Max Tokens</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    value={settings.maxTokens}
+                                    onChange={(e) => setSettings({...settings, maxTokens: parseInt(e.target.value)})}
+                                    min="100"
+                                    max="16000"
+                                />
+                            </div>
+                            <button className="btn btn-primary" onClick={handleSaveSettings} style={{width: '100%'}}>
+                                Save Settings
+                            </button>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">Optimization Settings</h2>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Optimizer Type</label>
+                                <select
+                                    className="form-select"
+                                    value={settings.optimizer}
+                                    onChange={(e) => setSettings({...settings, optimizer: e.target.value})}
+                                >
+                                    <option value="BootstrapFewShot">BootstrapFewShot</option>
+                                    <option value="MIPRO">MIPRO (Recommended)</option>
+                                    <option value="Copro">Copro</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Max Few-shot Examples</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    value={settings.maxFewShot}
+                                    onChange={(e) => setSettings({...settings, maxFewShot: parseInt(e.target.value)})}
+                                    min="1"
+                                    max="20"
+                                />
+                            </div>
+                            <div className="alert alert-info">
+                                <strong>MIPRO</strong> is recommended for complex tasks as it optimizes both instructions and few-shot examples automatically.
+                            </div>
+                        </div>
+
+                        <div className="card full-width">
+                            <div className="card-header">
+                                <h2 className="card-title">Current Configuration</h2>
+                            </div>
+                            <div className="code-block">
+                                {JSON.stringify(settings, null, 2)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div>
+                    <div className="sidebar">
+                        <div className="sidebar-header">
+                            <div className="sidebar-logo">DSPy Enterprise</div>
+                            <div className="sidebar-subtitle">Production Platform</div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <div className="sidebar-section-title">Main</div>
+                            <div className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+                                Dashboard
+                            </div>
+                            <div className={`nav-item ${activeTab === 'testing' ? 'active' : ''}`} onClick={() => setActiveTab('testing')}>
+                                Testing
+                            </div>
+                            <div className={`nav-item ${activeTab === 'learn' ? 'active' : ''}`} onClick={() => setActiveTab('learn')}>
+                                Learn DSPy
+                            </div>
+                            <div className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
+                                History
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <div className="sidebar-section-title">Management</div>
+                            <div className={`nav-item ${activeTab === 'artifacts' ? 'active' : ''}`} onClick={() => setActiveTab('artifacts')}>
+                                Artifacts
+                            </div>
+                            <div className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+                                Settings
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="main-content">
+                        <div className="header-bar">
+                            <h1 className="header-title">
+                                {activeTab === 'dashboard' && 'Dashboard'}
+                                {activeTab === 'testing' && 'Module Testing'}
+                                {activeTab === 'learn' && 'Learn DSPy'}
+                                {activeTab === 'history' && 'Request History'}
+                                {activeTab === 'artifacts' && 'Model Artifacts'}
+                                {activeTab === 'settings' && 'Settings'}
+                            </h1>
+                            <div className="header-actions">
+                                <div className={`status-badge ${apiStatus === 'healthy' ? 'healthy' : ''}`}>
+                                    <div className={`status-indicator ${apiStatus === 'healthy' ? 'healthy' : ''}`}></div>
+                                    {apiStatus === 'healthy' ? 'Connected' : 'Offline'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {activeTab === 'dashboard' && renderDashboard()}
+                        {activeTab === 'testing' && renderTesting()}
+                        {activeTab === 'learn' && renderLearn()}
+                        {activeTab === 'history' && renderHistory()}
+                        {activeTab === 'artifacts' && renderArtifacts()}
+                        {activeTab === 'settings' && renderSettings()}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

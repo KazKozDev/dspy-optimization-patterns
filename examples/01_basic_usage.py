@@ -12,7 +12,7 @@ from src.core.signatures import GenerateAnswer
 from src.core.metrics import exact_match
 
 # Configure LLM
-lm = dspy.LM(model="openai/gpt-5o-mini", temperature=0.0)
+lm = dspy.LM(model="openai/gpt-5-mini", temperature=0.0)
 dspy.settings.configure(lm=lm)
 
 # Create predictor

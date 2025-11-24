@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSPy Prompt Engineering Platform</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f5f7fa;
+            color: #1a202c;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: #1a202c;
+            padding: 32px 0;
+            overflow-y: auto;
+            color: white;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-logo {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 24px 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #cbd5e0;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .nav-item {
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: #a0aec0;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #cbd5e0;
+        }
+
+        .nav-item.active {
+            background: rgba(66, 153, 225, 0.1);
+            border-left-color: #4299e1;
+            color: #4299e1;
+            font-weight: 600;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            background: #f5f7fa;
+            padding: 40px;
+        }
+
+        .header-bar {
+            background: white;
+            padding: 28px 40px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-bar h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            letter-spacing: -0.5px;
+        }
+
+        .status-badge {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 16px;
+            background: #edf2f7;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .status-badge.healthy {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e0;
+        }
+
+        .status-indicator.healthy {
+            background: #48bb78;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+            letter-spacing: -0.3px;
+        }
+
+        .card-section {
+            margin-bottom: 24px;
+        }
+
+        .card-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .info-block {
+            background: #f7fafc;
+            padding: 14px;
+            border-radius: 6px;
+            border-left: 3px solid #4299e1;
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #2d3748;
+        }
+
+        .info-block strong {
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background: #f7fafc;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #4299e1;
+        }
+
+        .result-section h3 {
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .result-section p {
+            color: #2d3748;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .metric-box {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #4299e1;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            color: #2d3748;
+            font-weight: 700;
+            margin-top: 6px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 14px;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            line-height: 1.5;
+            margin-top: 12px;
+        }
+
+        .logs-container {
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4299e1;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .step-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 8px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .step-desc {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .signature-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 14px;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            line-height: 1.5;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 1400px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .full-width {
+                grid-column: 1;
+            }
+            .step-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 220px;
+            }
+            .main-content {
+                margin-left: 220px;
+                padding: 20px;
+            }
+            .header-bar {
+                padding: 20px;
+            }
+            .step-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #2d3748;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li:before {
+            content: "→ ";
+            color: #4299e1;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .comparison-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .comparison-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-header.unoptimized {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .comparison-header.optimized {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .comparison-content {
+            padding: 14px;
+            font-size: 12px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            color: #2d3748;
+            background: #f7fafc;
+        }
+
+        .optimization-flow {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .flow-step {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+
+        .flow-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .flow-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4299e1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .flow-content {
+            padding-top: 4px;
+        }
+
+        .flow-title {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .flow-desc {
+            color: #718096;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .metric-improvement {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .improvement-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .improvement-label {
+            color: #718096;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .improvement-metric {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 6px;
+        }
+
+        .improvement-note {
+            font-size: 12px;
+            color: #2d3748;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .example-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 14px;
+        }
+
+        .example-label {
+            font-size: 12px;
+            color: #4299e1;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .example-content {
+            font-size: 12px;
+            color: #2d3748;
+            line-height: 1.6;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_URL = 'http://localhost:8000';
+
+        function DSPyPlatform() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+            const [apiStatus, setApiStatus] = useState('checking');
+
+            const [qaQuestion, setQaQuestion] = useState('What is the capital of France?');
+            const [qaContext, setQaContext] = useState('Paris is the capital and largest city of France.');
+            const [ragQuestion, setRagQuestion] = useState('How does machine learning work?');
+            const [classifyText, setClassifyText] = useState('This is a technical article about machine learning.');
+
+            useEffect(() => {
+                fetch(`${API_URL}/health`)
+                    .then(r => r.json())
+                    .then(() => setApiStatus('healthy'))
+                    .catch(() => setApiStatus('offline'));
+            }, []);
+
+            const handleQA = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/qa`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: qaQuestion, context: qaContext })
+                    });
+                    const data = await response.json();
+                    setResult({ type: 'qa', success: response.ok, data });
+                } catch (error) {
+                    setResult({ type: 'qa', success: false, data: { error: error.message } });
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleRAG = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/rag`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: ragQuestion, top_k: 3 })
+                    });
+                    const data = await response.json();
+                    setResult({ type: 'rag', success: response.ok, data });
+                } catch (error) {
+                    setResult({ type: 'rag', success: false, data: { error: error.message } });
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleClassify = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/classify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: classifyText })
+                    });
+                    const data = await response.json();
+                    setResult({ type: 'classify', success: response.ok, data });
+                } catch (error) {
+                    setResult({ type: 'classify', success: false, data: { error: error.message } });
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const renderDashboard = () => (
+                <div className="content-grid">
+                    <div className="card">
+                        <h2>Platform Overview</h2>
+                        <div className="card-section">
+                            <div className="section-title">About DSPy</div>
+                            <div className="info-block">
+                                DSPy is a framework that <strong>automatically optimizes prompts</strong> instead of requiring manual engineering. It learns optimal prompting strategies from data through systematic optimization.
+                            </div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Core Concepts</div>
+                            <div className="info-block">
+                                <strong>Signatures:</strong> Define input/output contracts for language model tasks
+                            </div>
+                            <div className="info-block">
+                                <strong>Modules:</strong> Combine predictors into composable pipelines
+                            </div>
+                            <div className="info-block">
+                                <strong>Metrics:</strong> Quantify task quality to guide optimization
+                            </div>
+                            <div className="info-block">
+                                <strong>Optimizers:</strong> Search for best prompts and examples automatically
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>System Status</h2>
+                        <div className="card-section">
+                            <div className="section-title">API Status</div>
+                            <div style={{padding: '14px', backgroundColor: apiStatus === 'healthy' ? '#c6f6d5' : '#fed7d7', borderRadius: '6px', marginBottom: '20px'}}>
+                                <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                                    <div className={`status-indicator ${apiStatus === 'healthy' ? 'healthy' : ''}`}></div>
+                                    <strong style={{color: apiStatus === 'healthy' ? '#22543d' : '#742a2a'}}>
+                                        {apiStatus === 'healthy' ? 'API Operational' : 'API Offline'}
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Available Modules</div>
+                            <ul className="feature-list">
+                                <li>SimpleRAG - Retrieval Augmented Generation</li>
+                                <li>DocumentClassifier - Multi-class Classification</li>
+                                <li>ChainOfThought - Reasoning and Explanation</li>
+                            </ul>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Framework Features</div>
+                            <ul className="feature-list">
+                                <li>Automatic Prompt Optimization</li>
+                                <li>Few-shot Learning</li>
+                                <li>Chain of Thought Reasoning</li>
+                                <li>Multi-hop QA Support</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <h2>How It Works</h2>
+                        <div className="step-grid">
+                            <div className="step-item">
+                                <div className="step-number">1</div>
+                                <div className="step-title">Write Signature</div>
+                                <div className="step-desc">Define input/output format</div>
+                            </div>
+                            <div className="step-item">
+                                <div className="step-number">2</div>
+                                <div className="step-title">Create Module</div>
+                                <div className="step-desc">Compose predictors</div>
+                            </div>
+                            <div className="step-item">
+                                <div className="step-number">3</div>
+                                <div className="step-title">Define Metrics</div>
+                                <div className="step-desc">Measure quality</div>
+                            </div>
+                            <div className="step-item">
+                                <div className="step-number">4</div>
+                                <div className="step-title">Compile & Deploy</div>
+                                <div className="step-desc">Optimized prompts ready</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderSignatures = () => (
+                <div className="content-grid">
+                    <div className="card">
+                        <h2>Signature: GenerateAnswer</h2>
+                        <div className="card-section">
+                            <div className="section-title">Purpose</div>
+                            <div className="info-block">Generates answers to questions given context</div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Input Fields</div>
+                            <div className="info-block"><strong>context:</strong> Relevant text to base answer on</div>
+                            <div className="info-block"><strong>question:</strong> The question to answer</div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Output Fields</div>
+                            <div className="info-block"><strong>answer:</strong> Direct answer to the question</div>
+                            <div className="info-block"><strong>reasoning:</strong> Chain-of-thought reasoning</div>
+                        </div>
+                        <div className="signature-display">
+{`class GenerateAnswer(dspy.Signature):
+    context = dspy.InputField(
+        desc="may contain relevant facts")
+    question = dspy.InputField()
+    answer = dspy.OutputField(
+        desc="often between 1-5 words")
+    reasoning = dspy.OutputField(
+        desc="explain the reasoning")`}
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>Signature: ClassifyDocument</h2>
+                        <div className="card-section">
+                            <div className="section-title">Purpose</div>
+                            <div className="info-block">Classifies documents into predefined categories</div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Input Fields</div>
+                            <div className="info-block"><strong>document_text:</strong> Text to classify</div>
+                            <div className="info-block"><strong>categories:</strong> Available categories</div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Output Fields</div>
+                            <div className="info-block"><strong>category:</strong> Predicted category</div>
+                            <div className="info-block"><strong>reasoning:</strong> Why this category</div>
+                        </div>
+                        <div className="signature-display">
+{`class ClassifyDocument(dspy.Signature):
+    document_text = dspy.InputField()
+    categories = dspy.InputField(
+        desc="comma-separated")
+    category = dspy.OutputField(
+        desc="one of the categories")
+    reasoning = dspy.OutputField()`}
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>Signature: GenerateSearchQuery</h2>
+                        <div className="card-section">
+                            <div className="section-title">Purpose</div>
+                            <div className="info-block">Generates optimized search queries for RAG</div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Input Fields</div>
+                            <div className="info-block"><strong>user_question:</strong> Original user question</div>
+                            <div className="info-block"><strong>conversation_history:</strong> Previous context</div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Output Fields</div>
+                            <div className="info-block"><strong>search_query:</strong> Optimized search query</div>
+                        </div>
+                        <div className="signature-display">
+{`class GenerateSearchQuery(dspy.Signature):
+    user_question = dspy.InputField(
+        desc="the user's actual question")
+    conversation_history = dspy.InputField(
+        desc="previous conversation")
+    search_query = dspy.OutputField(
+        desc="optimized query for retriever")`}
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>Module: SimpleRAG</h2>
+                        <div className="card-section">
+                            <div className="section-title">Execution Flow</div>
+                            <div style={{padding: '12px', backgroundColor: '#f7fafc', borderRadius: '6px', marginBottom: '12px', fontSize: '13px', color: '#2d3748', border: '1px solid #e2e8f0'}}>
+                                1. Generate optimized search query<br/>
+                                2. Retrieve relevant documents<br/>
+                                3. Generate answer from retrieved context
+                            </div>
+                        </div>
+                        <div className="card-section">
+                            <div className="section-title">Optimizable Components</div>
+                            <div className="info-block">GenerateSearchQuery - learns to rephrase questions</div>
+                            <div className="info-block">GenerateAnswer - learns citation and formatting</div>
+                        </div>
+                        <div className="code-block">
+{`class SimpleRAG(dspy.Module):
+    def __init__(self):
+        self.generate_query = dspy.ChainOfThought(
+            GenerateSearchQuery)
+        self.generate_answer = dspy.ChainOfThought(
+            GenerateAnswer)
+
+    def forward(self, question, retriever_fn):
+        query = self.generate_query(question)
+        docs = retriever_fn(query.search_query)
+        return self.generate_answer(
+            context=docs, question=question)`}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderTesting = () => (
+                <div className="content-grid">
+                    <div className="card">
+                        <h2>Test: Question Answering</h2>
+                        <div className="form-group">
+                            <label>Question</label>
+                            <input
+                                type="text"
+                                value={qaQuestion}
+                                onChange={(e) => setQaQuestion(e.target.value)}
+                                placeholder="Enter your question"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Context</label>
+                            <textarea
+                                value={qaContext}
+                                onChange={(e) => setQaContext(e.target.value)}
+                                placeholder="Provide context for the question"
+                            />
+                        </div>
+                        <div className="button-group">
+                            <button className="btn btn-primary" onClick={handleQA} disabled={loading}>
+                                {loading ? 'Processing...' : 'Test Module'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>Test: RAG Search</h2>
+                        <div className="form-group">
+                            <label>Question</label>
+                            <input
+                                type="text"
+                                value={ragQuestion}
+                                onChange={(e) => setRagQuestion(e.target.value)}
+                                placeholder="Enter your question"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Top K Results</label>
+                            <input
+                                type="number"
+                                defaultValue="3"
+                                min="1"
+                                max="10"
+                                placeholder="Number of documents to retrieve"
+                            />
+                        </div>
+                        <div className="button-group">
+                            <button className="btn btn-primary" onClick={handleRAG} disabled={loading}>
+                                {loading ? 'Processing...' : 'Test Module'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>Test: Classification</h2>
+                        <div className="form-group">
+                            <label>Text to Classify</label>
+                            <textarea
+                                value={classifyText}
+                                onChange={(e) => setClassifyText(e.target.value)}
+                                placeholder="Enter text to classify"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Available Categories</label>
+                            <input type="text" value="research, news, tutorial, opinion, other" disabled />
+                        </div>
+                        <div className="button-group">
+                            <button className="btn btn-primary" onClick={handleClassify} disabled={loading}>
+                                {loading ? 'Processing...' : 'Test Module'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {result && (
+                        <div className="card full-width">
+                            <h2>{result.success ? 'Test Results' : 'Error'}</h2>
+                            <div className="result-section">
+                                <h3>Output</h3>
+                                <p>{result.data.answer || result.data.category || result.data.error || 'No result'}</p>
+                            </div>
+
+                            {result.data.reasoning && (
+                                <div className="result-section">
+                                    <h3>Reasoning</h3>
+                                    <p>{result.data.reasoning}</p>
+                                </div>
+                            )}
+
+                            {result.data.search_query && (
+                                <div className="result-section">
+                                    <h3>Search Query</h3>
+                                    <div className="code-block" style={{marginTop: '8px', fontSize: '12px'}}>
+                                        {result.data.search_query}
+                                    </div>
+                                </div>
+                            )}
+
+                            {result.data.execution_time_ms && (
+                                <div className="result-section">
+                                    <h3>Performance</h3>
+                                    <div className="metrics-grid">
+                                        <div className="metric-box">
+                                            <div className="metric-label">Total Time</div>
+                                            <div className="metric-value">{result.data.execution_time_ms.toFixed(0)}ms</div>
+                                        </div>
+                                        {result.data.retrieval_time_ms && (
+                                            <div className="metric-box">
+                                                <div className="metric-label">Retrieval Time</div>
+                                                <div className="metric-value">{result.data.retrieval_time_ms.toFixed(0)}ms</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {result.data.logs && result.data.logs.length > 0 && (
+                                <div className="result-section">
+                                    <h3>Execution Log</h3>
+                                    <div className="logs-container">
+                                        {result.data.logs.map((log, idx) => (
+                                            <div key={idx} className="log-entry">{log}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+
+            const renderSettings = () => (
+                <div className="content-grid">
+                    <div className="card">
+                        <h2>Model Configuration</h2>
+                        <div className="form-group">
+                            <label>Model</label>
+                            <select>
+                                <option>gpt-5-mini (Production)</option>
+                                <option>gpt-5 (Teacher Model)</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Temperature</label>
+                            <input type="text" placeholder="0.0 - 2.0" />
+                        </div>
+                        <div className="form-group">
+                            <label>Max Tokens</label>
+                            <input type="text" placeholder="100 - 4000" />
+                        </div>
+                        <div className="info-block" style={{marginTop: '20px'}}>
+                            <strong>Note:</strong> GPT-5 models require temperature=1.0 and max_tokens ≥ 16000
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2>Optimization Settings</h2>
+                        <div className="form-group">
+                            <label>Optimizer Type</label>
+                            <select>
+                                <option>BootstrapFewShot</option>
+                                <option>MIPRO</option>
+                                <option>Copro</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Max Few-shot Examples</label>
+                            <input type="number" defaultValue="3" min="1" max="20" />
+                        </div>
+                        <div className="form-group">
+                            <label>Training Set Size</label>
+                            <input type="number" defaultValue="10" min="5" max="1000" />
+                        </div>
+                        <div className="info-block" style={{marginTop: '20px'}}>
+                            <strong>BootstrapFewShot:</strong> Selects best examples from training data
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderOptimization = () => (
+                <div className="content-grid">
+                    <div className="card full-width">
+                        <h2>What DSPy Automatically Optimizes</h2>
+                        <div className="info-block" style={{marginTop: '20px', marginBottom: '20px'}}>
+                            <strong>The Challenge:</strong> You have a task. Instead of manually writing 50+ prompts and testing them one by one, DSPy automatically finds the <strong>best combination of:</strong>
+                        </div>
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginTop: '20px'}}>
+                            <div style={{padding: '16px', background: '#f7fafc', border: '1px solid #e2e8f0', borderRadius: '6px'}}>
+                                <div style={{fontSize: '14px', fontWeight: 600, color: '#1a202c', marginBottom: '8px'}}>Instructions</div>
+                                <div style={{fontSize: '13px', color: '#718096', lineHeight: '1.6'}}>How to frame the task, what to emphasize, style and tone</div>
+                            </div>
+                            <div style={{padding: '16px', background: '#f7fafc', border: '1px solid #e2e8f0', borderRadius: '6px'}}>
+                                <div style={{fontSize: '14px', fontWeight: 600, color: '#1a202c', marginBottom: '8px'}}>Examples</div>
+                                <div style={{fontSize: '13px', color: '#718096', lineHeight: '1.6'}}>Which training examples to use as few-shot demonstrations</div>
+                            </div>
+                            <div style={{padding: '16px', background: '#f7fafc', border: '1px solid #e2e8f0', borderRadius: '6px'}}>
+                                <div style={{fontSize: '14px', fontWeight: 600, color: '#1a202c', marginBottom: '8px'}}>Reasoning Patterns</div>
+                                <div style={{fontSize: '13px', color: '#718096', lineHeight: '1.6'}}>Whether to use chain-of-thought, intermediate steps, etc.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <h2>See The Difference: Before & After</h2>
+                        <div className="comparison-section">
+                            <div className="comparison-item">
+                                <div className="comparison-header unoptimized">Unoptimized (Manual)</div>
+                                <div className="comparison-content">
+                                    Answer the question based on context:
+
+                                    Context: {'{context}'}
+                                    Question: {'{question}'}
+                                    Answer:
+                                </div>
+                            </div>
+                            <div className="comparison-item">
+                                <div className="comparison-header optimized">Optimized (DSPy)</div>
+                                <div className="comparison-content">
+                                    Carefully analyze the provided context to answer the question accurately. Consider all relevant details and explain your reasoning before providing a direct answer.
+
+                                    Examples of good answers:
+                                    Q: {'{example_q}'}
+                                    A: {'{example_a}'}
+
+                                    Now answer:
+                                    Context: {'{context}'}
+                                    Question: {'{question}'}
+                                    Reasoning:
+                                    Answer:
+                                </div>
+                            </div>
+                        </div>
+                        <div className="info-block" style={{marginTop: '20px'}}>
+                            <strong>What Changed:</strong> The optimized version includes better task framing, selected examples from your training data, and asks for intermediate reasoning.
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <h2>How Optimization Works Step-by-Step</h2>
+                        <div className="optimization-flow">
+                            <div className="flow-step">
+                                <div className="flow-number">1</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Define Your Task</div>
+                                    <div className="flow-desc">
+                                        Create a signature describing inputs and outputs. For example, a GenerateAnswer signature that takes context + question and produces an answer.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">2</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Create a Predictor</div>
+                                    <div className="flow-desc">
+                                        Wrap your signature in dspy.ChainOfThought() or dspy.Predict(). This is your base module that will be optimized.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">3</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Define a Metric</div>
+                                    <div className="flow-desc">
+                                        Write a function that measures quality: exact_match, F1 score, semantic similarity, etc. DSPy uses this to evaluate different prompts.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">4</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Run Optimization</div>
+                                    <div className="flow-desc">
+                                        DSPy's BootstrapFewShot or MIPRO optimizer automatically tries different prompts and example combinations on your training data.
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flow-step">
+                                <div className="flow-number">5</div>
+                                <div className="flow-content">
+                                    <div className="flow-title">Get Compiled Program</div>
+                                    <div className="flow-desc">
+                                        The result is a compiled module with optimized prompts and few-shot examples baked in. Deploy this to production.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <h2>Real Example: Select Few-Shot Examples</h2>
+                        <div className="info-block" style={{marginBottom: '20px'}}>
+                            <strong>What DSPy Does:</strong> From your training data with 100 examples, it automatically selects the 2-3 BEST examples to include in the prompt because they improve the metric the most.
+                        </div>
+                        <div className="examples-grid">
+                            <div className="example-item">
+                                <div className="example-label">Training Data (All Available)</div>
+                                <div className="example-content">
+                                    Example 1: Q: "What is 2+2?" A: "4"
+                                    Example 2: Q: "What is the capital of France?" A: "Paris"
+                                    Example 3: Q: "Define machine learning" A: "..."
+                                    ... (97 more examples)
+                                </div>
+                            </div>
+                            <div className="example-item">
+                                <div className="example-label">Selected Few-Shot Examples</div>
+                                <div className="example-content">
+                                    Example 2: Q: "What is the capital of France?" A: "Paris"
+                                    Example 17: Q: "Name the longest river" A: "The Nile River is..."
+
+                                    DSPy chose these because they improved your metric the most!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <h2>Metric Improvement Example</h2>
+                        <div className="metric-improvement">
+                            <div className="improvement-box">
+                                <div className="improvement-label">Before Optimization</div>
+                                <div className="improvement-metric">72%</div>
+                                <div className="improvement-note">Accuracy with generic prompt</div>
+                            </div>
+                            <div className="improvement-box">
+                                <div className="improvement-label">After Optimization</div>
+                                <div className="improvement-metric">89%</div>
+                                <div className="improvement-note">Accuracy with optimized prompt + examples</div>
+                            </div>
+                        </div>
+                        <div className="info-block" style={{marginTop: '20px'}}>
+                            <strong>Improvement:</strong> +17% accuracy without changing the model or manually writing prompts. DSPy found the best combination automatically.
+                        </div>
+                    </div>
+
+                    <div className="card full-width">
+                        <h2>The Key Insight</h2>
+                        <div style={{padding: '20px', background: '#c6f6d5', borderRadius: '6px', border: '1px solid #9ae6b4'}}>
+                            <div style={{color: '#22543d', fontSize: '14px', lineHeight: '1.8'}}>
+                                <strong>Traditional Approach:</strong> You manually write prompts, test them, iterate. Time-consuming and often suboptimal.
+                                <br/><br/>
+                                <strong>DSPy Approach:</strong> Define the task, let DSPy optimize everything automatically. You get the best prompt combination for YOUR specific data and use case.
+                                <br/><br/>
+                                <strong>Why This Matters:</strong> Instead of being a prompt engineer who writes prompts, you become a task engineer who defines tasks. DSPy handles the rest.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div style={{display: 'flex', minHeight: '100vh'}}>
+                    <div className="sidebar">
+                        <div className="sidebar-logo">DSPy</div>
+                        <nav className="sidebar-nav">
+                            <div
+                                className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('dashboard')}
+                            >
+                                Dashboard
+                            </div>
+                            <div
+                                className={`nav-item ${activeTab === 'signatures' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('signatures')}
+                            >
+                                Signatures & Modules
+                            </div>
+                            <div
+                                className={`nav-item ${activeTab === 'testing' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('testing')}
+                            >
+                                Test Modules
+                            </div>
+                            <div
+                                className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('settings')}
+                            >
+                                Configuration
+                            </div>
+                            <div
+                                className={`nav-item ${activeTab === 'optimization' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('optimization')}
+                            >
+                                Optimization Guide
+                            </div>
+                        </nav>
+                    </div>
+
+                    <div className="main-content">
+                        <div className="header-bar">
+                            <h1>
+                                {activeTab === 'dashboard' && 'Dashboard'}
+                                {activeTab === 'signatures' && 'Signatures & Modules'}
+                                {activeTab === 'testing' && 'Test Modules'}
+                                {activeTab === 'settings' && 'Configuration'}
+                                {activeTab === 'optimization' && 'Optimization Guide'}
+                            </h1>
+                            <div className={`status-badge ${apiStatus === 'healthy' ? 'healthy' : ''}`}>
+                                <span className={`status-indicator ${apiStatus === 'healthy' ? 'healthy' : ''}`}></span>
+                                {apiStatus === 'healthy' ? 'Operational' : 'Offline'}
+                            </div>
+                        </div>
+
+                        {activeTab === 'dashboard' && renderDashboard()}
+                        {activeTab === 'signatures' && renderSignatures()}
+                        {activeTab === 'testing' && renderTesting()}
+                        {activeTab === 'settings' && renderSettings()}
+                        {activeTab === 'optimization' && renderOptimization()}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<DSPyPlatform />);
+    </script>
+</body>
+</html>

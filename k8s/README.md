@@ -86,7 +86,7 @@ Edit `ConfigMap` in `deployment.yaml`:
 
 ```yaml
 data:
-  STUDENT_MODEL: "gpt-5o-mini"  # Change model
+  STUDENT_MODEL: "gpt-5-mini"  # Change model
   ENVIRONMENT: "production"
   LOG_LEVEL: "INFO"
 ```

@@ -17,8 +17,8 @@ from src.core.metrics import hybrid_qa_metric
 from src.pipeline.loader import QADatasetLoader, split_dataset
 
 # 1. Configure models
-teacher_lm = dspy.LM(model="openai/gpt-5o", temperature=0.0)  # Best for optimization
-student_lm = dspy.LM(model="openai/gpt-5o-mini", temperature=0.0)  # Cheap for production
+teacher_lm = dspy.LM(model="openai/gpt-5", temperature=0.0)  # Best for optimization
+student_lm = dspy.LM(model="openai/gpt-5-mini", temperature=0.0)  # Cheap for production
 
 # 2. Load dataset
 print("Loading dataset...")

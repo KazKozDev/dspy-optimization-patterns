@@ -1,66 +1,75 @@
-# 🚀 DSPy Production-Ready Framework
+# DSPy Production Framework
 
-A production-grade implementation of DSPy for building, optimizing, and deploying LLM-based applications.
+Production-grade implementation of DSPy for building, optimizing, and deploying LLM applications.
 
-## 📖 Overview
+## Overview
 
-This repository demonstrates best practices for using DSPy in production environments. DSPy fundamentally changes how we build with LLMs: instead of manually crafting prompts, we **compile** programs that automatically optimize prompts and select few-shot examples.
+This framework demonstrates production best practices for DSPy. Instead of manually crafting prompts, DSPy compiles programs that automatically optimize prompts and select few-shot examples.
 
-### Key Concepts
+### Core Principles
 
-- **Programming vs Prompting**: Define logic, not prompts
+- **Programming over Prompting**: Define logic, not prompts
 - **Compilation**: Automatic optimization of prompts and examples
-- **Teacher-Student**: Use expensive models for optimization, deploy with cheap ones
-- **Artifacts as Truth**: Compiled programs are versioned like ML models
+- **Teacher-Student Pattern**: Use expensive models for optimization, deploy with cheaper ones
+- **Versioned Artifacts**: Compiled programs are versioned like ML models
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 project-root/
-├── config/               # YAML configs for models & optimizers
-├── data/                 # Training, dev, and test datasets
-├── artifacts/            # Compiled programs (JSON) - the "models"
+├── config/               # Model and optimizer configurations
+├── data/                 # Training, development, and test datasets
+├── artifacts/            # Compiled programs (JSON artifacts)
 ├── src/
 │   ├── core/            # DSPy signatures, modules, and metrics
-│   ├── pipeline/        # Data loading and optimization logic
+│   ├── pipeline/        # Data loading and optimization
 │   ├── utils/           # Tracing, logging, cost tracking
-│   └── app/             # FastAPI serving layer
+│   └── app/             # FastAPI server
 └── tests/               # Unit and integration tests
 ```
 
-## 🚦 Quick Start
+## Quick Start
 
-### 1. Installation
+### Installation
 
 ```bash
-# Using Poetry (recommended)
-make dev-install
+# Using Poetry
+poetry install --with dev
 
-# Or manually
-poetry install --with dev --extras all
+# Using Make
+make dev-install
 ```
 
-### 2. Setup Environment
+### Environment Setup
 
 ```bash
 cp .env.example .env
-# Edit .env and add your API keys:
-# OPENAI_API_KEY=sk-...
+# Edit .env and add your API keys
 ```
 
-### 3. Prepare Sample Data
+Required environment variables:
+- `OPENAI_API_KEY`: OpenAI API key
+- `ANTHROPIC_API_KEY`: Anthropic API key (optional)
+- `TEACHER_MODEL`: Model for optimization (default: gpt-5)
+- `STUDENT_MODEL`: Model for production (default: gpt-5-mini)
+
+### Data Preparation
 
 ```bash
 make prepare-sample-data
 ```
 
-### 4. Run Optimization (Compile Your Program)
+### Optimization
+
+Compile optimal prompts and few-shot examples:
 
 ```bash
-# This is the CORE of DSPy - compile optimal prompts
 make optimize-rag
+```
 
-# Or customize:
+Or customize:
+
+```bash
 python -m src.pipeline.optimizer \
   --module SimpleRAG \
   --data data/processed/qa_dataset.jsonl \
@@ -69,18 +78,19 @@ python -m src.pipeline.optimizer \
   --output artifacts/compiled_programs/rag_v1.json
 ```
 
-### 5. Deploy API
+### API Deployment
 
 ```bash
 make run-api
-# API docs: http://localhost:8000/docs
 ```
 
-## 📚 Core Components
+API documentation available at `http://localhost:8000/docs`
 
-### Signatures (`src/core/signatures.py`)
+## Core Components
 
-Signatures define the **contract** between your logic and the LLM.
+### Signatures
+
+Signatures define the contract between your logic and the LLM.
 
 ```python
 class GenerateAnswer(dspy.Signature):
@@ -91,66 +101,62 @@ class GenerateAnswer(dspy.Signature):
     answer: str = dspy.OutputField(desc="Concise answer")
 ```
 
-**Best Practices:**
-- Clear docstrings (used in prompts!)
+Best practices:
+- Clear docstrings (used in prompts)
 - Descriptive field names
 - Type hints for validation
 
-### Modules (`src/core/modules.py`)
+### Modules
 
-Modules contain your **business logic**. They work in two modes:
+Modules contain business logic and operate in two modes:
 
 1. **Zero-shot** (development): Default prompts
 2. **Optimized** (production): Load compiled state from artifacts
 
 ```python
-# Development
+# Development mode
 rag = SimpleRAG()
 
-# Production
+# Production mode
 rag = SimpleRAG()
 rag.load_compiled_state("artifacts/compiled_programs/rag_v1.json")
 ```
 
-**Key Pattern:**
+Module pattern:
 
 ```python
 class MyModule(BaseModule):
     def __init__(self, compiled_state_path: Optional[str] = None):
         super().__init__(compiled_state_path)
 
-        # Define sub-modules
         self.chain = dspy.ChainOfThought(MySignature)
 
-        # Auto-load if path provided
         if compiled_state_path:
             self.load_compiled_state(compiled_state_path)
 ```
 
-### Metrics (`src/core/metrics.py`)
+### Metrics
 
-Metrics define **what "good" means**. Without metrics, optimization is impossible.
+Metrics define success criteria. Without metrics, optimization is impossible.
 
 ```python
 def rag_quality_metric(example: dspy.Example, prediction: dspy.Prediction) -> float:
     """
-    Evaluates:
-    1. Retrieval quality (are relevant docs retrieved?)
-    2. Answer faithfulness (is answer grounded in context?)
-    3. Answer correctness (does it match expected answer?)
+    Evaluates retrieval quality, answer faithfulness, and correctness.
+    Returns float in [0.0, 1.0].
     """
-    # Implementation...
+    pass
 ```
 
-**Metric Types:**
+Metric types:
 - **Heuristic**: Exact match, substring match (fast, brittle)
 - **Semantic**: Embedding similarity (robust, moderate cost)
-- **LLM-as-Judge**: Use GPT-5o to evaluate (flexible, expensive, best quality)
+- **LLM-as-Judge**: Use GPT-5 to evaluate (flexible, expensive)
 - **Hybrid**: Combine multiple metrics (recommended)
 
-### Pipeline (`src/pipeline/`)
+### Pipeline
 
-#### Data Loading
+Data loading:
 
 ```python
 from src.pipeline.loader import load_and_split
@@ -158,13 +164,13 @@ from src.pipeline.loader import load_and_split
 trainset, devset, testset = load_and_split(
     "data/processed/qa_dataset.jsonl",
     task_type="rag",
-    train_size=50,   # For generating few-shot examples
-    dev_size=100,    # For validation during optimization
-    test_size=200,   # Hold-out for final evaluation
+    train_size=50,
+    dev_size=100,
+    test_size=200
 )
 ```
 
-#### Optimization
+Optimization:
 
 ```python
 from src.pipeline.optimizer import OptimizationPipeline
@@ -175,52 +181,49 @@ compiled_module, dev_score, test_score = pipeline.run(
     data_path="data/processed/qa_dataset.jsonl",
     metric_name="rag_quality",
     optimizer_name="mipro",
-    output_path="artifacts/compiled_programs/rag_v2.json",
+    output_path="artifacts/compiled_programs/rag_v2.json"
 )
 ```
 
-**Available Optimizers:**
-- `bootstrap`: Generate few-shot examples from training data
-- `mipro`: Multi-prompt instruction optimization (best for complex tasks)
+Available optimizers:
+- `bootstrap`: Generate few-shot examples
+- `mipro`: Multi-prompt instruction optimization
 - `signature_opt`: Refine field descriptions
 
-## 🔬 Optimization Deep Dive
+## Optimization Process
 
-### What Happens During Compilation?
+### Compilation Steps
 
-1. **Teacher Model** (GPT-5o) generates high-quality examples on training set
-2. **Optimizer** tries different:
-   - Instruction phrasings
-   - Few-shot example combinations
-   - Signature descriptions
+1. **Teacher Model** (GPT-5) generates high-quality examples
+2. **Optimizer** tries different instruction phrasings, few-shot combinations, and signature descriptions
 3. **Validation** on dev set selects best program
-4. **Compiled State** saved as JSON with:
-   - Optimized instructions
-   - Best few-shot examples
-   - Signature metadata
+4. **Compiled State** saved as JSON with optimized instructions and examples
 
 ### Teacher-Student Pattern
 
 ```yaml
 # config/models.yaml
 teacher:
-  model: "gpt-5o"        # Next-gen model - for optimization
+  model: "gpt-5"
+  temperature: 0.0
 
 student:
-  model: "gpt-5o-mini"   # Cost-effective - for production
+  model: "gpt-5-mini"
+  temperature: 0.0
 ```
 
-**Cost Savings Example:**
-- Optimization (one-time): $5 using GPT-5o teacher
-- Production (per request): $0.0001 using gpt-5o-mini student
-- **ROI**: After 5000 requests, you've broken even
+Cost example:
+- Optimization (one-time): $5 using GPT-5
+- Production (per request): $0.0001 using gpt-5-mini
+- Break-even: 5000 requests
 
-## 🌐 API Usage
+## API Usage
 
 ### Start Server
 
 ```bash
 make run-api
+# Or: uvicorn src.app.main:app --reload
 ```
 
 ### Question Answering
@@ -234,7 +237,7 @@ curl -X POST http://localhost:8000/qa \
   }'
 ```
 
-### RAG Endpoint
+### RAG
 
 ```bash
 curl -X POST http://localhost:8000/rag \
@@ -251,22 +254,21 @@ curl -X POST http://localhost:8000/rag \
 curl -X POST http://localhost:8000/classify \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "This is a research paper about transformers."
+    "text": "Research paper about transformers."
   }'
 ```
 
-## 📊 Observability
+## Observability
 
 ### Phoenix Integration
 
 ```python
 from src.utils.tracing import setup_phoenix_tracing
 
-# Start Phoenix (http://localhost:6006)
 setup_phoenix_tracing(project_name="dspy_production")
-
-# Now all DSPy calls are automatically traced!
 ```
+
+Phoenix UI available at `http://localhost:6006`
 
 ### Custom Tracing
 
@@ -285,35 +287,65 @@ from src.utils.tracing import CostTracker
 
 tracker = CostTracker()
 tracker.log_call(
-    model="gpt-5o-mini",
+    model="gpt-5-mini",
     input_tokens=500,
     output_tokens=200
 )
 tracker.save_report("cost_report.json")
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
-# Run all tests with coverage
+# All tests with coverage
 make test
 
-# Fast tests (no coverage)
+# Fast tests
 make test-fast
 
 # Watch mode
 make test-watch
 ```
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
-### Build Image
+### Build and Run
 
 ```bash
+# Build image
 make docker-build
+
+# Run with docker-compose
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f api
+
+# Stop services
+docker-compose down
 ```
 
-### Run Container
+### Services
+
+- **API**: FastAPI server on port 8000
+- **Qdrant**: Vector database on ports 6333, 6334
+- **Phoenix**: Observability on port 6006 (optional)
+- **Jupyter**: Development notebooks on port 8888 (optional)
+
+### Profiles
+
+```bash
+# With observability
+docker-compose --profile observability up -d
+
+# With Jupyter
+docker-compose --profile development up jupyter
+```
+
+### Single Container
 
 ```bash
 docker run -p 8000:8000 \
@@ -322,125 +354,113 @@ docker run -p 8000:8000 \
   dspy-production:latest
 ```
 
-### Kubernetes Example
+## Kubernetes Deployment
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dspy-api
-spec:
-  replicas: 3
-  template:
-    spec:
-      containers:
-      - name: api
-        image: dspy-production:latest
-        env:
-        - name: OPENAI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: openai-secret
-              key: api-key
-        volumeMounts:
-        - name: artifacts
-          mountPath: /app/artifacts
-          readOnly: true
-      volumes:
-      - name: artifacts
-        persistentVolumeClaim:
-          claimName: dspy-artifacts-pvc
+Full manifests in `k8s/` directory.
+
+```bash
+# Deploy all
+kubectl apply -f k8s/
+
+# Check status
+kubectl get all -n dspy-production
+
+# Scale
+kubectl scale deployment dspy-api --replicas=10 -n dspy-production
 ```
 
-## 📈 Production Workflow
+Features:
+- Horizontal Pod Autoscaling
+- Health checks and rolling updates
+- Persistent storage for artifacts and vector DB
+- Ingress with TLS
+- Resource limits and requests
+
+See [k8s/README.md](k8s/README.md) for details.
+
+## Production Workflow
 
 ### 1. Data Collection
 
-Continuously collect edge cases where your model fails:
+Collect edge cases where model fails:
 
 ```bash
-# Production logs → data/raw/failures.jsonl
-# Human annotations → data/processed/qa_dataset.jsonl
+# Production logs -> data/raw/failures.jsonl
+# Human annotations -> data/processed/qa_dataset.jsonl
 ```
 
 ### 2. Offline Optimization
 
 ```bash
-# Run weekly or when you have enough new data
 make optimize-rag
-
 # Artifact saved: artifacts/compiled_programs/rag_v2_20240115.json
 ```
 
 ### 3. Evaluation
 
 ```bash
-# Always evaluate on hold-out test set
 python -m src.pipeline.optimizer \
   --module SimpleRAG \
-  --data data/processed/qa_dataset.jsonl \
-  # ... (test set is automatically held out)
+  --data data/processed/qa_dataset.jsonl
 ```
+
+Test set is automatically held out for evaluation.
 
 ### 4. Deployment
 
 ```bash
-# Update production to use new artifact
-# artifacts/compiled_programs/rag_v2_20240115.json
-
-# Rolling deployment (zero downtime)
+# Rolling deployment
 kubectl rollout restart deployment/dspy-api
 ```
 
 ### 5. Monitoring
 
 - Track latency, cost, error rates
-- Use Phoenix to debug individual requests
-- A/B test new compiled programs
+- Use Phoenix for request debugging
+- A/B test compiled programs
 
-## 🔧 Configuration
+## Configuration
 
-### Model Configuration (`config/models.yaml`)
+### Models
+
+`config/models.yaml`:
 
 ```yaml
 teacher:
   provider: "openai"
-  model: "gpt-5o"  # Next-generation model
+  model: "gpt-5"
   temperature: 0.0
 
 student:
   provider: "openai"
-  model: "gpt-5o-mini"  # Cost-effective
+  model: "gpt-5-mini"
   temperature: 0.0
 
-# Alternative configurations
-gpt5o_teacher:
-  provider: "openai"
-  model: "gpt-5o-2025-01-20"
-
-# Or use Anthropic
 anthropic_teacher:
   provider: "anthropic"
   model: "claude-sonnet-4.5"
+  temperature: 0.0
 ```
 
-### Optimizer Configuration (`config/optimizers.yaml`)
+### Optimizers
+
+`config/optimizers.yaml`:
 
 ```yaml
 mipro:
   type: "MIPRO"
-  num_candidates: 10        # Instructions to try
-  max_bootstrapped_demos: 8 # Few-shot examples
-  metric_threshold: 0.80    # Minimum acceptable score
+  num_candidates: 10
+  max_bootstrapped_demos: 8
+  metric_threshold: 0.80
 
 run:
   train_size: 50
   dev_size: 100
   test_size: 200
-  cache_dir: ".cache/dspy"  # Cache LLM calls to save money
+  cache_dir: ".cache/dspy"
 ```
 
-## 💡 Advanced Patterns
+## Advanced Patterns
 
 ### Adaptive Routing
 
@@ -449,7 +469,6 @@ class AdaptiveModule(BaseModule):
     """Route to different strategies based on input complexity."""
 
     def forward(self, question: str, context: str):
-        # Determine complexity
         routing = self.route(question=question)
 
         if "simple" in routing.complexity:
@@ -465,32 +484,26 @@ class MultiHopReasoner(BaseModule):
     """Iterative reasoning for complex questions."""
 
     def forward(self, question: str, retriever_fn: callable):
-        # ReAct pattern: Thought → Action → Observation
         result = self.react(question=question, context=initial_context)
         return result
 ```
 
-### Ensemble of Optimizers
+### Ensemble Optimization
 
 ```python
-# Optimize same module with different strategies
 bootstrap_program = optimize_with_bootstrap(module, trainset, devset)
 mipro_program = optimize_with_mipro(module, trainset, devset)
 
-# Evaluate both on test set
-# Use best one in production
+# Evaluate both, use best in production
 ```
 
-## 🗄️ Vector Database Integration
+## Vector Database Integration
 
-Support for multiple vector DB providers for production RAG:
-
-### Qdrant (Recommended for Production)
+### Qdrant
 
 ```python
 from src.integrations.vector_db import create_retriever
 
-# Create retriever
 retriever = create_retriever(
     provider="qdrant",
     host="localhost",
@@ -498,23 +511,21 @@ retriever = create_retriever(
     collection_name="documents"
 )
 
-# Ingest documents
 retriever.upsert(
-    texts=["Document 1...", "Document 2..."],
+    texts=["Document 1", "Document 2"],
     metadata=[{"source": "web"}, {"source": "pdf"}]
 )
 
-# Search
 results = retriever.search("What is DSPy?", top_k=5)
 ```
 
 ### Supported Providers
 
-- **Qdrant** - Open-source, self-hosted, high performance
-- **Pinecone** - Managed service, auto-scaling
-- **Chroma** - Lightweight, perfect for development
+- **Qdrant**: Open-source, self-hosted, high performance
+- **Pinecone**: Managed service, auto-scaling
+- **Chroma**: Lightweight, development-friendly
 
-### Using with RAG
+### RAG Integration
 
 ```python
 from src.core.modules import SimpleRAG
@@ -522,77 +533,19 @@ from src.core.modules import SimpleRAG
 rag = SimpleRAG()
 rag.load_compiled_state("artifacts/compiled_programs/rag_v1.json")
 
-# Create retriever function
 def retriever_fn(query: str):
     results = retriever.search(query, top_k=5)
     return [r.text for r in results]
 
-# Run RAG
 result = rag.forward(
     question="How does DSPy work?",
     retriever_fn=retriever_fn
 )
 ```
 
-## 🐳 Local Development with Docker Compose
+## CI/CD
 
-Complete development environment with one command:
-
-```bash
-# Start everything: API + Qdrant + Phoenix
-docker-compose up -d
-
-# Start with observability
-docker-compose --profile observability up -d
-
-# Start Jupyter for experimentation
-docker-compose --profile development up jupyter
-
-# View logs
-docker-compose logs -f api
-
-# Stop everything
-docker-compose down
-```
-
-Services included:
-- **API**: FastAPI server on :8000
-- **Qdrant**: Vector DB on :6333
-- **Phoenix**: Observability on :6006
-- **Jupyter**: Notebooks on :8888
-
-## ☸️ Production Kubernetes Deployment
-
-Full K8s manifests included in `k8s/`:
-
-```bash
-# Quick deploy
-kubectl apply -f k8s/
-
-# Or step-by-step
-kubectl apply -f k8s/deployment.yaml  # API deployment
-kubectl apply -f k8s/qdrant.yaml      # Vector DB
-
-# Check status
-kubectl get all -n dspy-production
-
-# Scale
-kubectl scale deployment dspy-api --replicas=10 -n dspy-production
-```
-
-Features:
-- Horizontal autoscaling (HPA)
-- Health checks and rolling updates
-- Persistent storage for artifacts and vector DB
-- Ingress with TLS support
-- Resource limits and requests
-- Multi-replica deployment
-
-See [k8s/README.md](k8s/README.md) for complete guide.
-
-## 🔄 CI/CD Pipeline
-
-GitHub Actions workflow included (`.github/workflows/ci.yml`):
+GitHub Actions workflow in `.github/workflows/ci.yml`:
 
 **On every push:**
 - Linting (Ruff + Black)
@@ -603,77 +556,55 @@ GitHub Actions workflow included (`.github/workflows/ci.yml`):
 
 **On main branch:**
 - Build and push Docker image
-- Deploy to staging environment
+- Deploy to staging
 - Run integration tests
 
-Customize for your needs!
-
-## 📝 Example Scripts
-
-Quick start examples in `examples/`:
+## Examples
 
 ```bash
 # Basic usage
 python examples/01_basic_usage.py
 
-# Full optimization workflow
+# Optimization workflow
 python examples/02_optimization_workflow.py
 
 # RAG with vector DB
 python examples/03_rag_with_vector_db.py
 ```
 
-Helper scripts in `scripts/`:
+## Sample Datasets
 
-```bash
-# Prepare data
-python scripts/prepare_data.py \
-  --input data/raw/qa_dataset_sample.jsonl \
-  --task-type qa
+Located in `data/raw/`:
 
-# Quick optimization
-./scripts/optimize_model.sh SimpleRAG data/processed/qa_dataset.jsonl qa
-```
+- `qa_dataset_sample.jsonl`: 20 Q&A pairs about DSPy
+- `classification_dataset_sample.jsonl`: 20 tech/business/science articles
+- `rag_dataset_sample.jsonl`: 10 complex RAG examples
 
-## 📊 Sample Datasets
+All datasets ready for optimization.
 
-Production-quality datasets included in `data/raw/`:
+## Resources
 
-- **qa_dataset_sample.jsonl** - 20 Q&A pairs about DSPy (with context)
-- **classification_dataset_sample.jsonl** - 20 tech/business/science articles
-- **rag_dataset_sample.jsonl** - 10 complex RAG examples with contexts
-
-All ready to use for optimization!
-
-## 📚 Resources
-
-- [Quick Start Guide](QUICKSTART.md) - Get running in 5 minutes
+- [Quick Start Guide](QUICKSTART.md)
 - [DSPy Documentation](https://dspy-docs.vercel.app/)
 - [DSPy GitHub](https://github.com/stanfordnlp/dspy)
 - [Arize Phoenix](https://github.com/Arize-ai/phoenix)
-- [Paper: "DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines"](https://arxiv.org/abs/2310.03714)
+- [Paper: DSPy - Compiling Declarative Language Model Calls](https://arxiv.org/abs/2310.03714)
 
-## 🤝 Contributing
+## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing`)
-3. Make changes and test (`make test`)
-4. Format code (`make format`)
-5. Commit (`git commit -m 'Add amazing feature'`)
+1. Fork repository
+2. Create feature branch: `git checkout -b feature/name`
+3. Make changes and test: `make test`
+4. Format code: `make format`
+5. Commit: `git commit -m 'Add feature'`
 6. Push and open PR
 
-## 📄 License
+## License
 
-MIT License - see LICENSE file for details
+MIT License. See LICENSE file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- DSPy team at Stanford for the incredible framework
+- DSPy team at Stanford
 - Arize for Phoenix observability
-- The open-source community
-
----
-
-**Built with ❤️ using DSPy**
-
-For questions or issues, please open a GitHub issue or reach out via email.
+- Open-source community

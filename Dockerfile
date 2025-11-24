@@ -18,11 +18,11 @@ RUN pip install poetry==1.7.1
 WORKDIR /app
 
 # Copy dependency files
-COPY pyproject.toml ./
+COPY pyproject.toml poetry.lock* ./
 
-# Install dependencies (without dev)
+# Install dependencies (only main group, no extras)
 RUN poetry config virtualenvs.create false \
-    && poetry install --without dev --no-interaction --no-ansi
+    && poetry install --only main --no-interaction --no-ansi --no-root
 
 # ============================================================================
 # Stage 2: Runtime

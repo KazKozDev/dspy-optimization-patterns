@@ -240,8 +240,8 @@ class CostTracker:
 
     # Pricing per 1M tokens (as of 2025)
     PRICING = {
-        "gpt-5o": {"input": 2.0, "output": 8.0},
-        "gpt-5o-mini": {"input": 0.10, "output": 0.5},
+        "gpt-5": {"input": 2.0, "output": 8.0},
+        "gpt-5-mini": {"input": 0.10, "output": 0.5},
         "claude-sonnet-4.5": {"input": 2.5, "output": 12.0},
         "claude-haiku-4.5": {"input": 0.8, "output": 4.0},
     }

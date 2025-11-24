@@ -4,20 +4,20 @@
 
 teacher:
   provider: "openai"
-  model: "gpt-5o"  # Next-gen model for optimization
+  model: "gpt-5"  # GPT-5 for optimization
   temperature: 0.0
   max_tokens: 2000
 
 student:
   provider: "openai"
-  model: "gpt-5o-mini"  # Cost-effective for production
+  model: "gpt-5-mini"  # GPT-5 Mini for production
   temperature: 0.0
   max_tokens: 1500
 
 # Alternative configurations
-gpt5o_teacher:
+gpt5_teacher:
   provider: "openai"
-  model: "gpt-5o-2025-01-20"  # Latest GPT-5o
+  model: "gpt-5-2025-01-20"  # Latest GPT-5
   temperature: 0.0
   max_tokens: 2000
 
@@ -36,6 +36,6 @@ local_student:
 # Evaluator model (LLM-as-Judge)
 evaluator:
   provider: "openai"
-  model: "gpt-5o"  # Best for evaluation quality
+  model: "gpt-5"  # GPT-5 for evaluation quality
   temperature: 0.3
   max_tokens: 1000

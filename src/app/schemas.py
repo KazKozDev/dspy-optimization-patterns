@@ -76,6 +76,9 @@ class QuestionResponse(BaseModel):
     reasoning: Optional[str] = Field(None, description="Chain-of-thought reasoning")
     confidence: Optional[float] = Field(None, description="Confidence score 0-1")
     model_version: str = Field(..., description="Version of compiled model used")
+    prompt_used: Optional[str] = Field(None, description="The actual prompt sent to the LLM")
+    execution_time_ms: Optional[float] = Field(None, description="How long the request took")
+    logs: Optional[List[str]] = Field(default_factory=list, description="Execution logs")
 
     class Config:
         json_schema_extra = {
@@ -84,6 +87,9 @@ class QuestionResponse(BaseModel):
                 "reasoning": "Based on the provided context...",
                 "confidence": 0.95,
                 "model_version": "rag_v1_mipro",
+                "prompt_used": "Answer the following question based on the context...",
+                "execution_time_ms": 1234.5,
+                "logs": ["Processing question...", "Generating answer..."],
             }
         }
 
@@ -95,6 +101,9 @@ class ClassificationResponse(BaseModel):
     confidence: Optional[float] = Field(None, description="Confidence score")
     reasoning: Optional[str] = Field(None, description="Explanation")
     model_version: str = Field(..., description="Model version")
+    prompt_used: Optional[str] = Field(None, description="The actual prompt sent to the LLM")
+    execution_time_ms: Optional[float] = Field(None, description="How long the request took")
+    logs: Optional[List[str]] = Field(default_factory=list, description="Execution logs")
 
     class Config:
         json_schema_extra = {
@@ -103,6 +112,9 @@ class ClassificationResponse(BaseModel):
                 "confidence": 0.92,
                 "reasoning": "The text discusses AI research...",
                 "model_version": "classifier_v2",
+                "prompt_used": "Classify the following text into one of...",
+                "execution_time_ms": 856.3,
+                "logs": ["Classifying text...", "Computing confidence..."],
             }
         }
 
@@ -115,6 +127,10 @@ class RAGResponse(BaseModel):
     search_query: str = Field(..., description="Optimized search query used")
     reasoning: Optional[str] = Field(None, description="Reasoning steps")
     model_version: str = Field(..., description="Model version")
+    prompt_used: Optional[str] = Field(None, description="The actual prompt sent to the LLM")
+    execution_time_ms: Optional[float] = Field(None, description="How long the request took")
+    retrieval_time_ms: Optional[float] = Field(None, description="Time spent retrieving documents")
+    logs: Optional[List[str]] = Field(default_factory=list, description="Execution logs")
 
     class Config:
         json_schema_extra = {
@@ -124,6 +140,10 @@ class RAGResponse(BaseModel):
                 "search_query": "dspy optimization teacher student",
                 "reasoning": "First, I searched...",
                 "model_version": "rag_v1_mipro",
+                "prompt_used": "Given the following context, answer the question...",
+                "execution_time_ms": 2145.6,
+                "retrieval_time_ms": 523.2,
+                "logs": ["Retrieving documents...", "Generating answer..."],
             }
         }
 
