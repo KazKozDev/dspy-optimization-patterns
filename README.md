@@ -1,5 +1,8 @@
-# DSPy Production Framework
-
+<p align="center">
+  <img width="380" height="" alt="logog" src="https://github.com/user-attachments/assets/9d6c62de-2e1c-4e42-9fb9-02cb21cb7493" />
+  <br>
+<b>DSPy Production Framework</b>
+</p>
 Production-grade implementation of DSPy for building, optimizing, and deploying LLM applications.
 
 ## Overview
