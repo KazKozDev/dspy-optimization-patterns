@@ -7,8 +7,6 @@
 
 Production-grade implementation of DSPy for building, optimizing, and deploying LLM applications.
 
-## Overview
-
 This framework demonstrates production best practices for DSPy. Instead of manually crafting prompts, DSPy compiles programs that automatically optimize prompts and select few-shot examples.
 
 ### Core Principles
