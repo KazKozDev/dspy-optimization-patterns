@@ -6,6 +6,8 @@ Production-grade implementation of DSPy for building, optimizing, and deploying 
 
 This framework demonstrates production best practices for DSPy. Instead of manually crafting prompts, DSPy compiles programs that automatically optimize prompts and select few-shot examples.
 
+![imag](https://github.com/user-attachments/assets/ff5a8818-aa7b-4e55-b89f-4802432c556d)
+
 ### Core Principles
 
 - **Programming over Prompting**: Define logic, not prompts
