@@ -6,6 +6,11 @@
 
 Production-oriented DSPy starter for compiling, serving, and operating LLM programs with a teacher-student workflow.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI/CD Pipeline](https://github.com/KazKozDev/dspy-optimization-patterns/actions/workflows/ci.yml/badge.svg)](https://github.com/KazKozDev/dspy-optimization-patterns/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+[![DSPy](https://img.shields.io/badge/DSPy-2.5%2B-0A7B83.svg)](https://github.com/stanfordnlp/dspy)
+
 ## Highlights
 
 - Compiles prompts into versioned artifacts
