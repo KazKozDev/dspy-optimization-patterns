@@ -4,7 +4,6 @@ Unit tests for DSPy modules.
 These tests ensure modules work correctly in both zero-shot and optimized modes.
 """
 
-
 import pytest
 
 from src.core.modules import BaseModule, DocumentClassifier, SimpleRAG

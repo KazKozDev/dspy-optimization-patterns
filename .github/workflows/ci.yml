@@ -40,7 +40,7 @@ jobs:
           path: |
             ~/.cache/pypoetry
             .venv
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
 
@@ -82,7 +82,7 @@ jobs:
           path: |
             ~/.cache/pypoetry
             .venv
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
 
       - name: Install dependencies
         run: poetry install --with dev

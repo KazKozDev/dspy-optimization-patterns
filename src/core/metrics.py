@@ -16,7 +16,6 @@ Best Practices:
 Critical: The metric defines what "good" means for your task.
 """
 
-
 import dspy
 from dspy.evaluate import SemanticF1
 
