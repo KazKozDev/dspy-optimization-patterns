@@ -1,316 +1,122 @@
-# Kubernetes Deployment Guide
+# Kubernetes Deployment
 
-This directory contains Kubernetes manifests for deploying DSPy in production.
+This directory contains the Kubernetes manifests for running the DSPy API and Qdrant in a cluster. Use it after you already have a container image and want a minimal production-style deployment with health checks, persistent storage, autoscaling, and ingress.
+
+## Included Manifests
+
+- `deployment.yaml` creates the namespace, API config, API secret placeholder, artifacts PVC, API deployment, service, HPA, and ingress.
+- `qdrant.yaml` creates the Qdrant PVC, StatefulSet, and service.
 
 ## Prerequisites
 
-- Kubernetes cluster (1.24+)
-- kubectl configured
-- Helm (optional, for cert-manager)
-- Container registry access
+- Kubernetes cluster with `kubectl` access
+- A published API image that replaces the placeholder image in `deployment.yaml`
+- Real values for `OPENAI_API_KEY` and, if needed, `ANTHROPIC_API_KEY`
+- A storage class named `standard`, or edits to match your cluster
+- An ingress controller if you plan to use the included ingress resource
 
-## Quick Start
+## Deployment Flow
 
-### 1. Create Namespace
+1. Build and push the API image.
 
 ```bash
-kubectl apply -f deployment.yaml
+docker build -t ghcr.io/your-org/dspy-api:latest .
+docker push ghcr.io/your-org/dspy-api:latest
 ```
 
-This creates the `dspy-production` namespace and all resources.
+2. Update placeholders in `deployment.yaml`.
 
-### 2. Configure Secrets
+Replace:
 
-**Important**: Replace placeholder secrets with real values!
+- `ghcr.io/your-org/dspy-api:latest`
+- API keys in `stringData`
+- ingress hostnames and TLS secret names if you will expose the service publicly
+
+3. Apply the API manifests.
 
 ```bash
-# Create secret from file
-kubectl create secret generic dspy-secrets \
-  --from-literal=OPENAI_API_KEY=sk-your-key \
-  --from-literal=ANTHROPIC_API_KEY=sk-ant-your-key \
-  -n dspy-production
-
-# Or edit the secret in deployment.yaml before applying
+kubectl apply -f k8s/deployment.yaml
 ```
 
-### 3. Deploy Qdrant Vector DB
+4. Deploy Qdrant.
 
 ```bash
-kubectl apply -f qdrant.yaml
-```
-
-Wait for Qdrant to be ready:
-
-```bash
+kubectl apply -f k8s/qdrant.yaml
 kubectl wait --for=condition=ready pod -l app=qdrant -n dspy-production --timeout=300s
 ```
 
-### 4. Build and Push Docker Image
+5. Verify the rollout.
 
 ```bash
-# Build
-docker build -t ghcr.io/your-org/dspy-api:v1.0.0 .
-
-# Push
-docker push ghcr.io/your-org/dspy-api:v1.0.0
-```
-
-### 5. Deploy API
-
-Update `deployment.yaml` with your image name, then:
-
-```bash
-kubectl apply -f deployment.yaml
-```
-
-### 6. Verify Deployment
-
-```bash
-# Check pods
-kubectl get pods -n dspy-production
-
-# Check logs
+kubectl get all -n dspy-production
 kubectl logs -f deployment/dspy-api -n dspy-production
-
-# Port forward for testing
 kubectl port-forward service/dspy-api-service 8000:80 -n dspy-production
 ```
 
-Visit: http://localhost:8000/docs
+Open `http://localhost:8000/docs` after port-forwarding.
 
 ## Configuration
 
-### Environment Variables
+The API deployment reads runtime settings from the `dspy-config` ConfigMap in `deployment.yaml`.
 
-Edit `ConfigMap` in `deployment.yaml`:
+Relevant keys:
 
-```yaml
-data:
-  STUDENT_MODEL: "gpt-5-mini"  # Change model
-  ENVIRONMENT: "production"
-  LOG_LEVEL: "INFO"
+- `STUDENT_MODEL`
+- `ENVIRONMENT`
+- `LOG_LEVEL`
+- `QDRANT_HOST`
+- `QDRANT_PORT`
+
+The deployment also mounts `/app/artifacts` from the `dspy-artifacts-pvc` claim. If you want optimized programs in the cluster, you need to place compiled artifacts there.
+
+## Updating Artifacts
+
+One direct approach is to copy a compiled artifact into a running pod and restart the deployment:
+
+```bash
+kubectl cp artifacts/compiled_programs/rag_v1_mipro.json \
+  dspy-production/$(kubectl get pod -n dspy-production -l app=dspy-api -o jsonpath='{.items[0].metadata.name}'):/app/artifacts/compiled_programs/
+
+kubectl rollout restart deployment/dspy-api -n dspy-production
 ```
 
-### Scaling
+Use a more durable artifact delivery path if you plan to operate this in production.
 
-#### Manual Scaling
+## Scaling And Access
+
+Manual scaling:
 
 ```bash
 kubectl scale deployment dspy-api --replicas=5 -n dspy-production
 ```
 
-#### Auto-scaling
+The included HPA targets CPU and memory and scales between 3 and 10 replicas.
 
-The HPA is configured to scale between 3-10 replicas based on CPU/memory.
-
-To adjust:
-
-```yaml
-spec:
-  minReplicas: 3
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        averageUtilization: 70
-```
-
-### Resource Limits
-
-Adjust based on your workload:
-
-```yaml
-resources:
-  requests:
-    memory: "512Mi"
-    cpu: "250m"
-  limits:
-    memory: "2Gi"
-    cpu: "1000m"
-```
-
-## Ingress Setup
-
-### Install Ingress Controller
-
-```bash
-# NGINX Ingress
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
-```
-
-### Install Cert-Manager (for TLS)
-
-```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
-```
-
-### Configure Domain
-
-Update `deployment.yaml` Ingress section:
-
-```yaml
-spec:
-  tls:
-  - hosts:
-    - api.yourdomain.com  # Your domain
-    secretName: dspy-api-tls
-  rules:
-  - host: api.yourdomain.com
-```
-
-## Updating Compiled Programs
-
-Compiled programs are stored in PVC. To update:
-
-### Option 1: Direct Upload
-
-```bash
-# Copy artifact to pod
-kubectl cp artifacts/compiled_programs/rag_v2.json \
-  dspy-production/dspy-api-xxxxx:/app/artifacts/compiled_programs/
-
-# Restart pods to load new artifact
-kubectl rollout restart deployment/dspy-api -n dspy-production
-```
-
-### Option 2: CI/CD Pipeline
-
-See `.github/workflows/ci.yml` for automated deployment on git push.
-
-## Monitoring
-
-### View Logs
-
-```bash
-# All pods
-kubectl logs -f -l app=dspy-api -n dspy-production
-
-# Specific pod
-kubectl logs -f dspy-api-xxxxx -n dspy-production
-
-# Previous container (if crashed)
-kubectl logs dspy-api-xxxxx -n dspy-production --previous
-```
-
-### Metrics
-
-Install Prometheus + Grafana:
-
-```bash
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
-```
-
-### Phoenix Observability
-
-Deploy Phoenix for request tracing:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: phoenix
-  namespace: dspy-production
-spec:
-  template:
-    spec:
-      containers:
-      - name: phoenix
-        image: arizephoenix/phoenix:latest
-        ports:
-        - containerPort: 6006
-```
+The included ingress expects an NGINX-style ingress class and placeholder hostnames. Adjust those settings before exposing the service publicly.
 
 ## Troubleshooting
 
-### Pods Not Starting
+Pods not becoming ready:
 
 ```bash
-# Describe pod
-kubectl describe pod dspy-api-xxxxx -n dspy-production
-
-# Check events
+kubectl describe pod -n dspy-production -l app=dspy-api
 kubectl get events -n dspy-production --sort-by='.lastTimestamp'
 ```
 
-### Out of Memory
-
-Increase memory limits in `deployment.yaml`.
-
-### High Latency
-
-1. Check HPA scaling: `kubectl get hpa -n dspy-production`
-2. Increase replicas: `kubectl scale deployment dspy-api --replicas=10`
-3. Review metrics: Are pods CPU/memory saturated?
-
-### API Key Issues
-
-Verify secrets:
+Configuration or secret issues:
 
 ```bash
+kubectl get configmap dspy-config -n dspy-production -o yaml
 kubectl get secret dspy-secrets -n dspy-production -o yaml
 ```
 
-## Backup and Disaster Recovery
+Service reachable only inside the cluster:
 
-### Backup Artifacts
+- confirm the `Service` exists
+- use `kubectl port-forward` for local validation
+- check ingress controller status if external traffic is expected
 
-```bash
-# Create backup of PVC
-kubectl exec -n dspy-production dspy-api-xxxxx -- tar czf /tmp/artifacts-backup.tar.gz /app/artifacts
+## Related Docs
 
-kubectl cp dspy-production/dspy-api-xxxxx:/tmp/artifacts-backup.tar.gz ./backup.tar.gz
-```
-
-### Backup Qdrant Data
-
-```bash
-# Snapshot Qdrant
-kubectl exec -n dspy-production qdrant-0 -- curl -X POST http://localhost:6333/collections/documents/snapshots
-
-# Download snapshot (see Qdrant docs)
-```
-
-## Production Checklist
-
-- [ ] Configure real secrets (not placeholders)
-- [ ] Set up domain and TLS certificates
-- [ ] Configure resource limits based on load testing
-- [ ] Set up monitoring (Prometheus/Grafana)
-- [ ] Configure log aggregation (ELK/Loki)
-- [ ] Set up alerting (PagerDuty/Opsgenie)
-- [ ] Test disaster recovery procedures
-- [ ] Document runbooks for common issues
-- [ ] Set up cost monitoring
-- [ ] Configure network policies for security
-- [ ] Enable Pod Security Policies
-- [ ] Set up backup automation
-
-## Cost Optimization
-
-### Use Spot Instances
-
-For non-critical workloads:
-
-```yaml
-spec:
-  template:
-    spec:
-      nodeSelector:
-        node.kubernetes.io/instance-type: spot
-      tolerations:
-      - key: "spot"
-        operator: "Equal"
-        value: "true"
-        effect: "NoSchedule"
-```
-
-### Right-size Resources
-
-Monitor actual usage and adjust requests/limits to avoid over-provisioning.
-
-### Use Cheaper Models
-
-For staging/dev environments, use cheaper models in ConfigMap.
+- [Main README](../README.md)
+- [Quick Start](../QUICKSTART.md)
