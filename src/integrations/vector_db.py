@@ -10,9 +10,9 @@ Supports multiple vector DB providers:
 Each provider implements a common interface for easy switching.
 """
 
-from typing import List, Dict, Any, Optional, Protocol
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
+from typing import Any, Protocol
 
 
 @dataclass
@@ -21,22 +21,22 @@ class SearchResult:
 
     text: str
     score: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     id: str
 
 
 class VectorDBInterface(Protocol):
     """Protocol for vector database implementations."""
 
-    def search(self, query: str, top_k: int = 5, filter: Optional[Dict] = None) -> List[SearchResult]:
+    def search(self, query: str, top_k: int = 5, filter: dict | None = None) -> list[SearchResult]:
         """Search for similar documents."""
         ...
 
-    def upsert(self, texts: List[str], metadata: List[Dict], ids: Optional[List[str]] = None):
+    def upsert(self, texts: list[str], metadata: list[dict], ids: list[str] | None = None):
         """Insert or update documents."""
         ...
 
-    def delete(self, ids: List[str]):
+    def delete(self, ids: list[str]):
         """Delete documents by ID."""
         ...
 
@@ -73,16 +73,15 @@ class QdrantRetriever:
         port: int = 6333,
         collection_name: str = "documents",
         embedding_model: str = "all-MiniLM-L6-v2",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ):
         try:
             from qdrant_client import QdrantClient
-            from qdrant_client.models import Distance, VectorParams, PointStruct
             from sentence_transformers import SentenceTransformer
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "Qdrant integration requires: pip install qdrant-client sentence-transformers"
-            )
+            ) from e
 
         self.collection_name = collection_name
 
@@ -115,8 +114,8 @@ class QdrantRetriever:
         self,
         query: str,
         top_k: int = 5,
-        filter: Optional[Dict] = None,
-    ) -> List[SearchResult]:
+        filter: dict | None = None,
+    ) -> list[SearchResult]:
         """Search for similar documents."""
         # Embed query
         query_vector = self.embedding_model.encode(query).tolist()
@@ -144,15 +143,16 @@ class QdrantRetriever:
 
     def upsert(
         self,
-        texts: List[str],
-        metadata: List[Dict],
-        ids: Optional[List[str]] = None,
+        texts: list[str],
+        metadata: list[dict],
+        ids: list[str] | None = None,
     ):
         """Insert or update documents."""
         from qdrant_client.models import PointStruct
 
         if ids is None:
             import uuid
+
             ids = [str(uuid.uuid4()) for _ in texts]
 
         # Embed texts
@@ -165,7 +165,7 @@ class QdrantRetriever:
                 vector=vector,
                 payload={**meta, "text": text},
             )
-            for id_, vector, text, meta in zip(ids, vectors, texts, metadata)
+            for id_, vector, text, meta in zip(ids, vectors, texts, metadata, strict=False)
         ]
 
         # Upsert
@@ -176,7 +176,7 @@ class QdrantRetriever:
 
         print(f"✓ Upserted {len(texts)} documents to Qdrant")
 
-    def delete(self, ids: List[str]):
+    def delete(self, ids: list[str]):
         """Delete documents by ID."""
         self.client.delete(
             collection_name=self.collection_name,
@@ -211,7 +211,7 @@ class PineconeRetriever:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         environment: str = "us-west1-gcp",
         index_name: str = "documents",
         embedding_model: str = "all-MiniLM-L6-v2",
@@ -219,10 +219,10 @@ class PineconeRetriever:
         try:
             import pinecone
             from sentence_transformers import SentenceTransformer
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "Pinecone integration requires: pip install pinecone-client sentence-transformers"
-            )
+            ) from e
 
         api_key = api_key or os.getenv("PINECONE_API_KEY")
         if not api_key:
@@ -255,8 +255,8 @@ class PineconeRetriever:
         self,
         query: str,
         top_k: int = 5,
-        filter: Optional[Dict] = None,
-    ) -> List[SearchResult]:
+        filter: dict | None = None,
+    ) -> list[SearchResult]:
         """Search for similar documents."""
         # Embed query
         query_vector = self.embedding_model.encode(query).tolist()
@@ -284,13 +284,14 @@ class PineconeRetriever:
 
     def upsert(
         self,
-        texts: List[str],
-        metadata: List[Dict],
-        ids: Optional[List[str]] = None,
+        texts: list[str],
+        metadata: list[dict],
+        ids: list[str] | None = None,
     ):
         """Insert or update documents."""
         if ids is None:
             import uuid
+
             ids = [str(uuid.uuid4()) for _ in texts]
 
         # Embed texts
@@ -299,7 +300,7 @@ class PineconeRetriever:
         # Create upsert data
         to_upsert = [
             (id_, vector, {**meta, "text": text})
-            for id_, vector, text, meta in zip(ids, vectors, texts, metadata)
+            for id_, vector, text, meta in zip(ids, vectors, texts, metadata, strict=False)
         ]
 
         # Upsert in batches
@@ -310,7 +311,7 @@ class PineconeRetriever:
 
         print(f"✓ Upserted {len(texts)} documents to Pinecone")
 
-    def delete(self, ids: List[str]):
+    def delete(self, ids: list[str]):
         """Delete documents by ID."""
         self.index.delete(ids=ids)
 
@@ -345,10 +346,10 @@ class ChromaRetriever:
         try:
             import chromadb
             from sentence_transformers import SentenceTransformer
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "Chroma integration requires: pip install chromadb sentence-transformers"
-            )
+            ) from e
 
         # Initialize Chroma
         self.client = chromadb.PersistentClient(path=persist_directory)
@@ -364,8 +365,8 @@ class ChromaRetriever:
         self,
         query: str,
         top_k: int = 5,
-        filter: Optional[Dict] = None,
-    ) -> List[SearchResult]:
+        filter: dict | None = None,
+    ) -> list[SearchResult]:
         """Search for similar documents."""
         # Embed query
         query_vector = self.embedding_model.encode(query).tolist()
@@ -394,13 +395,14 @@ class ChromaRetriever:
 
     def upsert(
         self,
-        texts: List[str],
-        metadata: List[Dict],
-        ids: Optional[List[str]] = None,
+        texts: list[str],
+        metadata: list[dict],
+        ids: list[str] | None = None,
     ):
         """Insert or update documents."""
         if ids is None:
             import uuid
+
             ids = [str(uuid.uuid4()) for _ in texts]
 
         # Embed texts
@@ -416,7 +418,7 @@ class ChromaRetriever:
 
         print(f"✓ Upserted {len(texts)} documents to Chroma")
 
-    def delete(self, ids: List[str]):
+    def delete(self, ids: list[str]):
         """Delete documents by ID."""
         self.collection.delete(ids=ids)
 
@@ -459,9 +461,7 @@ def create_retriever(
     }
 
     if provider not in providers:
-        raise ValueError(
-            f"Unknown provider: {provider}. Choose from {list(providers.keys())}"
-        )
+        raise ValueError(f"Unknown provider: {provider}. Choose from {list(providers.keys())}")
 
     return providers[provider](**kwargs)
 
@@ -491,7 +491,7 @@ def ingest_documents_from_file(
     texts = []
     metadatas = []
 
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             if line.strip():
                 doc = json.loads(line)

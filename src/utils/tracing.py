@@ -16,16 +16,14 @@ Tools:
 This module provides integration with Phoenix and basic logging.
 """
 
-import os
 import json
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any
-from datetime import datetime
 from contextlib import contextmanager
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import dspy
-
 
 # ============================================================================
 # BASIC LOGGING SETUP
@@ -54,18 +52,14 @@ def setup_logging(
 
     # File handler (JSON format for parsing)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_handler = logging.FileHandler(
-        log_path / f"dspy_{timestamp}.jsonl"
-    )
+    file_handler = logging.FileHandler(log_path / f"dspy_{timestamp}.jsonl")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(JSONFormatter())
 
     # Console handler (human-readable)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    )
+    console_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
@@ -99,7 +93,7 @@ class JSONFormatter(logging.Formatter):
 
 def setup_phoenix_tracing(
     project_name: str = "dspy_production",
-    endpoint: Optional[str] = None,
+    endpoint: str | None = None,
 ) -> None:
     """
     Setup Arize Phoenix for observability.
@@ -132,9 +126,7 @@ def setup_phoenix_tracing(
             print(f"🔍 Phoenix UI: {endpoint}")
 
         # Instrument DSPy
-        DSPyInstrumentor().instrument(
-            tracer_provider=px.tracer_provider(project_name=project_name)
-        )
+        DSPyInstrumentor().instrument(tracer_provider=px.tracer_provider(project_name=project_name))
 
         print(f"✓ Phoenix tracing enabled for project: {project_name}")
         print(f"   View traces at: {endpoint}")
@@ -171,10 +163,10 @@ class DSPyTracer:
     def log_prediction(
         self,
         module_name: str,
-        inputs: Dict[str, Any],
+        inputs: dict[str, Any],
         prediction: dspy.Prediction,
         latency_ms: float,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ):
         """Log a single prediction."""
         trace_data = {
@@ -189,12 +181,12 @@ class DSPyTracer:
             trace_data["metadata"] = metadata
 
         self.logger.info(
-            f"Prediction logged",
+            "Prediction logged",
             extra={"extra": trace_data},
         )
 
     @contextmanager
-    def trace_module(self, module_name: str, inputs: Dict[str, Any]):
+    def trace_module(self, module_name: str, inputs: dict[str, Any]):
         """
         Context manager for tracing module execution.
 
@@ -291,7 +283,7 @@ class CostTracker:
 
         return total_cost
 
-    def report(self) -> Dict[str, Any]:
+    def report(self) -> dict[str, Any]:
         """Generate cost report."""
         return {
             "total_cost_usd": round(self.total_cost, 4),
@@ -299,9 +291,7 @@ class CostTracker:
             "total_input_tokens": sum(c["input_tokens"] for c in self.call_history),
             "total_output_tokens": sum(c["output_tokens"] for c in self.call_history),
             "avg_cost_per_call": (
-                round(self.total_cost / len(self.call_history), 4)
-                if self.call_history
-                else 0
+                round(self.total_cost / len(self.call_history), 4) if self.call_history else 0
             ),
         }
 
@@ -313,7 +303,7 @@ class CostTracker:
         with open(output_path, "w") as f:
             json.dump(report, f, indent=2)
 
-        print(f"💰 Cost Report:")
+        print("💰 Cost Report:")
         print(f"   Total Cost: ${report['total_cost_usd']:.4f}")
         print(f"   Total Calls: {report['total_calls']}")
         print(f"   Avg Cost/Call: ${report['avg_cost_per_call']:.4f}")
@@ -359,7 +349,7 @@ def inspect_compiled_program(compiled_program_path: str):
     - Optimized instructions
     - Signatures
     """
-    with open(compiled_program_path, "r") as f:
+    with open(compiled_program_path) as f:
         program_data = json.load(f)
 
     print("\n" + "=" * 80)
@@ -378,7 +368,7 @@ def inspect_compiled_program(compiled_program_path: str):
                     print(f"   {demo}")
 
             if "signature_instructions" in predictor_data:
-                print(f"\n   Instructions:")
+                print("\n   Instructions:")
                 print(f"   {predictor_data['signature_instructions']}")
 
             print()
@@ -386,7 +376,7 @@ def inspect_compiled_program(compiled_program_path: str):
 
 def debug_prediction(
     module: dspy.Module,
-    inputs: Dict[str, Any],
+    inputs: dict[str, Any],
 ) -> dspy.Prediction:
     """
     Run prediction with detailed debugging output.

@@ -16,14 +16,11 @@ Best Practices:
 Critical: The metric defines what "good" means for your task.
 """
 
-from typing import Optional, List, Dict, Any
-import re
 
 import dspy
 from dspy.evaluate import SemanticF1
 
 from .signatures import EvaluateAnswer
-
 
 # ============================================================================
 # BASIC HEURISTIC METRICS
@@ -112,7 +109,7 @@ class LLMJudgeMetric:
     Never use GPT-5-mini to judge GPT-5.
     """
 
-    def __init__(self, judge_model: Optional[dspy.LM] = None):
+    def __init__(self, judge_model: dspy.LM | None = None):
         """
         Args:
             judge_model: Strong model for evaluation (e.g., GPT-5)
@@ -331,8 +328,7 @@ def classification_with_reasoning(
     """
     correct_class = classification_accuracy(example, prediction)
     has_reasoning = (
-        hasattr(prediction, "reasoning")
-        and len(prediction.reasoning) >= min_reasoning_length
+        hasattr(prediction, "reasoning") and len(prediction.reasoning) >= min_reasoning_length
     )
 
     return correct_class and has_reasoning
@@ -366,8 +362,7 @@ def get_metric(metric_name: str, **kwargs) -> callable:
 
     if metric_name not in metrics_registry:
         raise ValueError(
-            f"Unknown metric: {metric_name}. "
-            f"Available: {list(metrics_registry.keys())}"
+            f"Unknown metric: {metric_name}. " f"Available: {list(metrics_registry.keys())}"
         )
 
     return metrics_registry[metric_name]
@@ -380,7 +375,7 @@ def get_metric(metric_name: str, **kwargs) -> callable:
 
 def debug_metric_failures(
     module: dspy.Module,
-    dataset: List[dspy.Example],
+    dataset: list[dspy.Example],
     metric: callable,
     output_path: str = "metric_failures.jsonl",
 ):
@@ -409,7 +404,7 @@ def debug_metric_failures(
                     {
                         "example": example.toDict(),
                         "prediction": prediction.toDict(),
-                        "score": float(score) if isinstance(score, (int, float)) else 0,
+                        "score": float(score) if isinstance(score, int | float) else 0,
                     }
                 )
         except Exception as e:

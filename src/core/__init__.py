@@ -1,5 +1,69 @@
-"""Core DSPy components: Signatures, Modules, Metrics"""
+"""Core DSPy components: signatures, modules, and metrics."""
 
-from .signatures import *
-from .modules import *
-from .metrics import *
+from .metrics import (
+    LLMJudgeMetric,
+    answer_faithfulness,
+    classification_accuracy,
+    classification_with_reasoning,
+    debug_metric_failures,
+    exact_match,
+    get_metric,
+    hybrid_qa_metric,
+    length_constrained_match,
+    rag_quality_metric,
+    reasoning_steps_present,
+    retrieval_relevance,
+    semantic_similarity_metric,
+    substring_match,
+)
+from .modules import (
+    AdaptiveModule,
+    BaseModule,
+    DocumentClassifier,
+    MultiHopReasoner,
+    SimpleRAG,
+    load_module_from_artifact,
+)
+from .signatures import (
+    ClassifyDocument,
+    EvaluateAnswer,
+    ExtractIntent,
+    GenerateAnswer,
+    GenerateCode,
+    GenerateSearchQuery,
+    MultiHopQA,
+    SummarizeWithStyle,
+    ValidateLogicalConsistency,
+)
+
+__all__ = [
+    "AdaptiveModule",
+    "answer_faithfulness",
+    "BaseModule",
+    "classification_accuracy",
+    "classification_with_reasoning",
+    "ClassifyDocument",
+    "debug_metric_failures",
+    "DocumentClassifier",
+    "EvaluateAnswer",
+    "exact_match",
+    "ExtractIntent",
+    "GenerateAnswer",
+    "GenerateCode",
+    "GenerateSearchQuery",
+    "get_metric",
+    "hybrid_qa_metric",
+    "length_constrained_match",
+    "LLMJudgeMetric",
+    "load_module_from_artifact",
+    "MultiHopQA",
+    "MultiHopReasoner",
+    "rag_quality_metric",
+    "reasoning_steps_present",
+    "retrieval_relevance",
+    "semantic_similarity_metric",
+    "SimpleRAG",
+    "substring_match",
+    "SummarizeWithStyle",
+    "ValidateLogicalConsistency",
+]

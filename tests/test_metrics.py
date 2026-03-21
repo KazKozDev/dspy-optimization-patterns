@@ -4,14 +4,14 @@ Unit tests for metrics.
 Metrics are critical for DSPy optimization - test them thoroughly!
 """
 
-import pytest
 import dspy
+import pytest
 
 from src.core.metrics import (
-    exact_match,
-    substring_match,
     classification_accuracy,
+    exact_match,
     get_metric,
+    substring_match,
 )
 
 
@@ -59,18 +59,14 @@ class TestClassificationMetrics:
 
     def test_classification_accuracy_true(self):
         """Test correct classification."""
-        example = dspy.Example(
-            text="test document", category="technology"
-        ).with_inputs("text")
+        example = dspy.Example(text="test document", category="technology").with_inputs("text")
         prediction = dspy.Prediction(category="technology")
 
         assert classification_accuracy(example, prediction) is True
 
     def test_classification_accuracy_false(self):
         """Test incorrect classification."""
-        example = dspy.Example(
-            text="test document", category="technology"
-        ).with_inputs("text")
+        example = dspy.Example(text="test document", category="technology").with_inputs("text")
         prediction = dspy.Prediction(category="science")
 
         assert classification_accuracy(example, prediction) is False

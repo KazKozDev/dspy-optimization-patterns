@@ -21,28 +21,26 @@ Docker:
 
 import os
 import time
-from pathlib import Path
-from typing import Optional, List
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+import dspy
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import dspy
 
-from src.core.modules import SimpleRAG, DocumentClassifier, load_module_from_artifact
 from src.app.schemas import (
-    QuestionRequest,
-    QuestionResponse,
     ClassificationRequest,
     ClassificationResponse,
+    ErrorResponse,
+    HealthResponse,
+    QuestionRequest,
+    QuestionResponse,
     RAGRequest,
     RAGResponse,
-    HealthResponse,
-    ErrorResponse,
 )
+from src.core.modules import DocumentClassifier, SimpleRAG, load_module_from_artifact
 from src.utils.tracing import DSPyTracer, setup_logging
-
 
 # ============================================================================
 # GLOBAL STATE
@@ -53,12 +51,12 @@ class AppState:
     """Container for application state."""
 
     def __init__(self):
-        self.rag_module: Optional[SimpleRAG] = None
-        self.classifier_module: Optional[DocumentClassifier] = None
+        self.rag_module: SimpleRAG | None = None
+        self.classifier_module: DocumentClassifier | None = None
         self.model_version: str = "unoptimized"
         self.tracer: DSPyTracer = DSPyTracer()
         self.start_time: float = time.time()
-        self.lm: Optional[dspy.LM] = None
+        self.lm: dspy.LM | None = None
 
 
 state = AppState()
@@ -274,7 +272,7 @@ async def question_answering(request: QuestionRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
-        )
+        ) from e
 
 
 @app.post("/rag", response_model=RAGResponse)
@@ -301,7 +299,7 @@ async def rag_endpoint(request: RAGRequest):
         logs.append("🔍 Starting RAG pipeline...")
 
         # Mock retriever function
-        def mock_retriever(query: str) -> List[str]:
+        def mock_retriever(query: str) -> list[str]:
             """
             Placeholder retriever.
 
@@ -359,7 +357,7 @@ async def rag_endpoint(request: RAGRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
-        )
+        ) from e
 
 
 # ============================================================================
@@ -420,7 +418,7 @@ async def classify_document(request: ClassificationRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
-        )
+        ) from e
 
 
 # ============================================================================
@@ -507,30 +505,29 @@ async def list_artifacts():
                     artifact_type = "QA"
 
                 # Check if this is the currently loaded artifact
-                is_active = (state.model_version == artifact_file.stem)
+                is_active = state.model_version == artifact_file.stem
 
-                artifacts.append({
-                    "name": artifact_file.name,
-                    "type": artifact_type,
-                    "size_kb": round(stat.st_size / 1024, 2),
-                    "created": stat.st_ctime,
-                    "modified": stat.st_mtime,
-                    "active": is_active,
-                    "path": str(artifact_file)
-                })
+                artifacts.append(
+                    {
+                        "name": artifact_file.name,
+                        "type": artifact_type,
+                        "size_kb": round(stat.st_size / 1024, 2),
+                        "created": stat.st_ctime,
+                        "modified": stat.st_mtime,
+                        "active": is_active,
+                        "path": str(artifact_file),
+                    }
+                )
 
         # Sort by modified time (newest first)
         artifacts.sort(key=lambda x: x["modified"], reverse=True)
 
-        return {
-            "total": len(artifacts),
-            "artifacts": artifacts
-        }
+        return {"total": len(artifacts), "artifacts": artifacts}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error listing artifacts: {str(e)}"
-        )
+            detail=f"Error listing artifacts: {str(e)}",
+        ) from e
 
 
 @app.post("/artifacts/{artifact_name}/activate")
@@ -545,8 +542,7 @@ async def activate_artifact(artifact_name: str):
 
         if not artifact_path.exists():
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Artifact not found: {artifact_name}"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Artifact not found: {artifact_name}"
             )
 
         # Determine module type and reload
@@ -558,7 +554,7 @@ async def activate_artifact(artifact_name: str):
             return {
                 "success": True,
                 "message": f"Successfully activated RAG artifact: {artifact_name}",
-                "active_version": state.model_version
+                "active_version": state.model_version,
             }
         elif "classifier" in artifact_name.lower():
             state.classifier_module = DocumentClassifier(
@@ -569,24 +565,24 @@ async def activate_artifact(artifact_name: str):
             return {
                 "success": True,
                 "message": f"Successfully activated Classifier artifact: {artifact_name}",
-                "active_version": artifact_path.stem
+                "active_version": artifact_path.stem,
             }
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Could not determine artifact type from filename"
+                detail="Could not determine artifact type from filename",
             )
 
     except FileNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+            detail=str(e),
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error activating artifact: {str(e)}"
-        )
+            detail=f"Error activating artifact: {str(e)}",
+        ) from e
 
 
 @app.get("/stats")
@@ -604,10 +600,10 @@ async def get_stats():
         "active_model": state.model_version,
         "modules_loaded": {
             "rag": state.rag_module is not None,
-            "classifier": state.classifier_module is not None
+            "classifier": state.classifier_module is not None,
         },
         "api_status": "healthy" if state.rag_module is not None else "degraded",
-        "timestamp": time.time()
+        "timestamp": time.time(),
     }
 
 

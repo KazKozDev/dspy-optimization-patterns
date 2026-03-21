@@ -18,23 +18,21 @@ Usage:
 """
 
 import argparse
+from collections.abc import Callable
 from pathlib import Path
-from typing import Optional, List, Callable
-from datetime import datetime
-import yaml
 
 import dspy
+import yaml
 from dspy.teleprompt import (
+    MIPRO,
     BootstrapFewShot,
     BootstrapFewShotWithRandomSearch,
-    MIPRO,
     SignatureOptimizer,
 )
 
-from src.core.modules import SimpleRAG, DocumentClassifier, MultiHopReasoner
-from src.core.metrics import get_metric, debug_metric_failures
+from src.core.metrics import debug_metric_failures, get_metric
+from src.core.modules import DocumentClassifier, MultiHopReasoner, SimpleRAG
 from src.pipeline.loader import load_and_split
-
 
 # ============================================================================
 # CONFIGURATION LOADING
@@ -43,7 +41,7 @@ from src.pipeline.loader import load_and_split
 
 def load_config(config_path: str) -> dict:
     """Load YAML configuration."""
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 
@@ -122,7 +120,7 @@ def create_optimizer(
             metric=metric,
             max_bootstrapped_demos=config.get("max_bootstrapped_demos", 8),
             max_labeled_demos=config.get("max_labeled_demos", 4),
-            teacher_settings=dict(lm=teacher_lm),
+            teacher_settings={"lm": teacher_lm},
         )
 
     elif optimizer_type == "BootstrapFewShotWithRandomSearch":
@@ -132,7 +130,7 @@ def create_optimizer(
             max_labeled_demos=config.get("max_labeled_demos", 4),
             num_candidate_programs=config.get("num_candidate_programs", 10),
             num_threads=config.get("num_threads", 4),
-            teacher_settings=dict(lm=teacher_lm),
+            teacher_settings={"lm": teacher_lm},
         )
 
     elif optimizer_type == "MIPRO":
@@ -235,7 +233,7 @@ class OptimizationPipeline:
 
         if module_class == DocumentClassifier:
             # Special case: needs categories
-            categories = list(set(ex.category for ex in trainset))
+            categories = list({ex.category for ex in trainset})
             module = module_class(categories=categories)
         else:
             module = module_class()
@@ -282,7 +280,7 @@ class OptimizationPipeline:
         print(f"\n✓ Dev Set Score: {dev_score:.2%}")
 
         # Step 7: Save compiled program
-        print(f"\n💾 Saving compiled program...")
+        print("\n💾 Saving compiled program...")
         output_path_obj = Path(output_path)
         output_path_obj.parent.mkdir(parents=True, exist_ok=True)
 
@@ -328,9 +326,7 @@ class OptimizationPipeline:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Optimize DSPy modules (compile prompts)"
-    )
+    parser = argparse.ArgumentParser(description="Optimize DSPy modules (compile prompts)")
     parser.add_argument(
         "--module",
         type=str,

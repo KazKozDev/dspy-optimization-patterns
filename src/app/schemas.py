@@ -4,9 +4,7 @@ Pydantic Schemas for API Requests/Responses
 These define the contract between client and server.
 """
 
-from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
-
 
 # ============================================================================
 # REQUEST SCHEMAS
@@ -17,10 +15,8 @@ class QuestionRequest(BaseModel):
     """Request for question-answering."""
 
     question: str = Field(..., description="User's question", min_length=1)
-    context: Optional[str] = Field(None, description="Optional context for answering")
-    conversation_history: Optional[str] = Field(
-        default="", description="Previous conversation turns"
-    )
+    context: str | None = Field(None, description="Optional context for answering")
+    conversation_history: str | None = Field(default="", description="Previous conversation turns")
 
     class Config:
         json_schema_extra = {
@@ -39,9 +35,7 @@ class ClassificationRequest(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "text": "This is a groundbreaking AI research paper on transformers."
-            }
+            "example": {"text": "This is a groundbreaking AI research paper on transformers."}
         }
 
 
@@ -50,9 +44,7 @@ class RAGRequest(BaseModel):
 
     question: str = Field(..., description="User's question", min_length=1)
     top_k: int = Field(5, description="Number of documents to retrieve", ge=1, le=20)
-    conversation_history: Optional[str] = Field(
-        default="", description="Previous conversation"
-    )
+    conversation_history: str | None = Field(default="", description="Previous conversation")
 
     class Config:
         json_schema_extra = {
@@ -73,12 +65,12 @@ class QuestionResponse(BaseModel):
     """Response for question-answering."""
 
     answer: str = Field(..., description="Generated answer")
-    reasoning: Optional[str] = Field(None, description="Chain-of-thought reasoning")
-    confidence: Optional[float] = Field(None, description="Confidence score 0-1")
+    reasoning: str | None = Field(None, description="Chain-of-thought reasoning")
+    confidence: float | None = Field(None, description="Confidence score 0-1")
     model_version: str = Field(..., description="Version of compiled model used")
-    prompt_used: Optional[str] = Field(None, description="The actual prompt sent to the LLM")
-    execution_time_ms: Optional[float] = Field(None, description="How long the request took")
-    logs: Optional[List[str]] = Field(default_factory=list, description="Execution logs")
+    prompt_used: str | None = Field(None, description="The actual prompt sent to the LLM")
+    execution_time_ms: float | None = Field(None, description="How long the request took")
+    logs: list[str] | None = Field(default_factory=list, description="Execution logs")
 
     class Config:
         json_schema_extra = {
@@ -98,12 +90,12 @@ class ClassificationResponse(BaseModel):
     """Response for classification."""
 
     category: str = Field(..., description="Predicted category")
-    confidence: Optional[float] = Field(None, description="Confidence score")
-    reasoning: Optional[str] = Field(None, description="Explanation")
+    confidence: float | None = Field(None, description="Confidence score")
+    reasoning: str | None = Field(None, description="Explanation")
     model_version: str = Field(..., description="Model version")
-    prompt_used: Optional[str] = Field(None, description="The actual prompt sent to the LLM")
-    execution_time_ms: Optional[float] = Field(None, description="How long the request took")
-    logs: Optional[List[str]] = Field(default_factory=list, description="Execution logs")
+    prompt_used: str | None = Field(None, description="The actual prompt sent to the LLM")
+    execution_time_ms: float | None = Field(None, description="How long the request took")
+    logs: list[str] | None = Field(default_factory=list, description="Execution logs")
 
     class Config:
         json_schema_extra = {
@@ -123,14 +115,14 @@ class RAGResponse(BaseModel):
     """Response for RAG system."""
 
     answer: str = Field(..., description="Generated answer")
-    sources: List[str] = Field(..., description="Retrieved source documents")
+    sources: list[str] = Field(..., description="Retrieved source documents")
     search_query: str = Field(..., description="Optimized search query used")
-    reasoning: Optional[str] = Field(None, description="Reasoning steps")
+    reasoning: str | None = Field(None, description="Reasoning steps")
     model_version: str = Field(..., description="Model version")
-    prompt_used: Optional[str] = Field(None, description="The actual prompt sent to the LLM")
-    execution_time_ms: Optional[float] = Field(None, description="How long the request took")
-    retrieval_time_ms: Optional[float] = Field(None, description="Time spent retrieving documents")
-    logs: Optional[List[str]] = Field(default_factory=list, description="Execution logs")
+    prompt_used: str | None = Field(None, description="The actual prompt sent to the LLM")
+    execution_time_ms: float | None = Field(None, description="How long the request took")
+    retrieval_time_ms: float | None = Field(None, description="Time spent retrieving documents")
+    logs: list[str] | None = Field(default_factory=list, description="Execution logs")
 
     class Config:
         json_schema_extra = {
@@ -161,4 +153,4 @@ class ErrorResponse(BaseModel):
     """Error response."""
 
     error: str = Field(..., description="Error message")
-    detail: Optional[str] = Field(None, description="Detailed error information")
+    detail: str | None = Field(None, description="Detailed error information")

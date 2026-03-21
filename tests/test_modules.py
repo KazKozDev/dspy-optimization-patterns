@@ -4,11 +4,10 @@ Unit tests for DSPy modules.
 These tests ensure modules work correctly in both zero-shot and optimized modes.
 """
 
-import pytest
-from unittest.mock import Mock, patch
-import dspy
 
-from src.core.modules import SimpleRAG, DocumentClassifier, BaseModule
+import pytest
+
+from src.core.modules import BaseModule, DocumentClassifier, SimpleRAG
 
 
 class TestBaseModule:
@@ -82,9 +81,7 @@ class TestDocumentClassifier:
         categories = ["technology", "science", "business"]
         classifier = DocumentClassifier(categories=categories)
 
-        result = classifier(
-            document_text="This is an article about AI and machine learning."
-        )
+        result = classifier(document_text="This is an article about AI and machine learning.")
 
         assert hasattr(result, "category")
         assert result.category in categories

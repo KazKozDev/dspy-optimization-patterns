@@ -19,16 +19,14 @@ Example Usage:
     rag.load("artifacts/compiled_programs/rag_v1_mipro.json")
 """
 
-import json
 from pathlib import Path
-from typing import Optional, List
 
 import dspy
 
 from .signatures import (
+    ClassifyDocument,
     GenerateAnswer,
     GenerateSearchQuery,
-    ClassifyDocument,
     MultiHopQA,
 )
 
@@ -43,7 +41,7 @@ class BaseModule(dspy.Module):
     - Logging and debugging utilities
     """
 
-    def __init__(self, compiled_state_path: Optional[str] = None):
+    def __init__(self, compiled_state_path: str | None = None):
         super().__init__()
         self._compiled_state_path = compiled_state_path
         self._version = "unoptimized"
@@ -85,7 +83,7 @@ class SimpleRAG(BaseModule):
     - Answer generation learns to cite sources, format properly
     """
 
-    def __init__(self, compiled_state_path: Optional[str] = None):
+    def __init__(self, compiled_state_path: str | None = None):
         super().__init__(compiled_state_path)
 
         # Define sub-modules (these will be optimized during compile())
@@ -125,9 +123,7 @@ class SimpleRAG(BaseModule):
         combined_context = "\n\n".join(contexts)
 
         # Step 3: Generate answer from context
-        answer_result = self.generate_answer(
-            context=combined_context, question=question
-        )
+        answer_result = self.generate_answer(context=combined_context, question=question)
 
         return dspy.Prediction(
             answer=answer_result.answer,
@@ -149,8 +145,8 @@ class DocumentClassifier(BaseModule):
 
     def __init__(
         self,
-        categories: List[str],
-        compiled_state_path: Optional[str] = None,
+        categories: list[str],
+        compiled_state_path: str | None = None,
     ):
         super().__init__(compiled_state_path)
         self.categories = categories
@@ -185,7 +181,7 @@ class MultiHopReasoner(BaseModule):
     This is where DSPy shines - it learns to break down complex questions.
     """
 
-    def __init__(self, compiled_state_path: Optional[str] = None):
+    def __init__(self, compiled_state_path: str | None = None):
         super().__init__(compiled_state_path)
 
         # ReAct module handles iterative reasoning
@@ -228,7 +224,7 @@ class AdaptiveModule(BaseModule):
     The optimizer learns WHEN to use which strategy.
     """
 
-    def __init__(self, compiled_state_path: Optional[str] = None):
+    def __init__(self, compiled_state_path: str | None = None):
         super().__init__(compiled_state_path)
 
         # Simple path

@@ -15,41 +15,40 @@ Best Practices:
 """
 
 import json
-from pathlib import Path
-from typing import List, Dict, Any, Tuple
 import random
+from pathlib import Path
+from typing import Any
 
 import dspy
-
 
 # ============================================================================
 # DATA LOADING FROM COMMON FORMATS
 # ============================================================================
 
 
-def load_jsonl(file_path: str) -> List[Dict[str, Any]]:
+def load_jsonl(file_path: str) -> list[dict[str, Any]]:
     """Load data from JSONL file (one JSON object per line)."""
     data = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         for line in f:
             if line.strip():
                 data.append(json.loads(line))
     return data
 
 
-def load_json(file_path: str) -> List[Dict[str, Any]]:
+def load_json(file_path: str) -> list[dict[str, Any]]:
     """Load data from JSON file (array of objects)."""
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         data = json.load(f)
     return data if isinstance(data, list) else [data]
 
 
-def load_csv(file_path: str) -> List[Dict[str, Any]]:
+def load_csv(file_path: str) -> list[dict[str, Any]]:
     """Load data from CSV file."""
     import csv
 
     data = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         data = list(reader)
     return data
@@ -61,9 +60,9 @@ def load_csv(file_path: str) -> List[Dict[str, Any]]:
 
 
 def dict_to_example(
-    data_dict: Dict[str, Any],
-    input_keys: List[str],
-    output_keys: List[str],
+    data_dict: dict[str, Any],
+    input_keys: list[str],
+    output_keys: list[str],
 ) -> dspy.Example:
     """
     Convert dictionary to dspy.Example.
@@ -99,12 +98,12 @@ def dict_to_example(
 
 
 def split_dataset(
-    examples: List[dspy.Example],
+    examples: list[dspy.Example],
     train_ratio: float = 0.5,
     dev_ratio: float = 0.3,
     test_ratio: float = 0.2,
     random_seed: int = 42,
-) -> Tuple[List[dspy.Example], List[dspy.Example], List[dspy.Example]]:
+) -> tuple[list[dspy.Example], list[dspy.Example], list[dspy.Example]]:
     """
     Split dataset into train/dev/test sets.
 
@@ -155,7 +154,7 @@ class QADatasetLoader:
     """
 
     @staticmethod
-    def load(file_path: str, has_context: bool = False) -> List[dspy.Example]:
+    def load(file_path: str, has_context: bool = False) -> list[dspy.Example]:
         """Load QA dataset from file."""
         path = Path(file_path)
 
@@ -194,7 +193,9 @@ class ClassificationDatasetLoader:
     """
 
     @staticmethod
-    def load(file_path: str, text_key: str = "text", label_key: str = "category") -> List[dspy.Example]:
+    def load(
+        file_path: str, text_key: str = "text", label_key: str = "category"
+    ) -> list[dspy.Example]:
         """Load classification dataset."""
         path = Path(file_path)
 
@@ -237,7 +238,7 @@ class RAGDatasetLoader:
     """
 
     @staticmethod
-    def load(file_path: str) -> List[dspy.Example]:
+    def load(file_path: str) -> list[dspy.Example]:
         """Load RAG dataset."""
         path = Path(file_path)
 
@@ -276,9 +277,9 @@ class RAGDatasetLoader:
 
 
 def augment_with_negatives(
-    examples: List[dspy.Example],
+    examples: list[dspy.Example],
     num_negatives: int = 2,
-) -> List[dspy.Example]:
+) -> list[dspy.Example]:
     """
     Augment dataset with negative examples.
 
@@ -306,7 +307,7 @@ def augment_with_negatives(
 # ============================================================================
 
 
-def validate_dataset(examples: List[dspy.Example], required_fields: List[str]):
+def validate_dataset(examples: list[dspy.Example], required_fields: list[str]):
     """
     Validate that all examples have required fields.
 
@@ -317,8 +318,7 @@ def validate_dataset(examples: List[dspy.Example], required_fields: List[str]):
 
         if missing_fields:
             raise ValueError(
-                f"Example {i} missing fields: {missing_fields}\n"
-                f"Example: {example}"
+                f"Example {i} missing fields: {missing_fields}\n" f"Example: {example}"
             )
 
     print(f"✓ Validated {len(examples)} examples with fields: {required_fields}")
@@ -336,7 +336,7 @@ def load_and_split(
     dev_size: int = 100,
     test_size: int = 200,
     random_seed: int = 42,
-) -> Tuple[List[dspy.Example], List[dspy.Example], List[dspy.Example]]:
+) -> tuple[list[dspy.Example], list[dspy.Example], list[dspy.Example]]:
     """
     One-stop function to load and split dataset.
 
