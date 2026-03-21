@@ -1,3 +1,7 @@
+<p align="center">
+  <img width="240" alt="DSPy Production Framework logo" src="https://github.com/user-attachments/assets/a82845a4-511b-4203-b931-950463d64b6d" />
+</p>
+
 # DSPy Production Framework
 
 Production-oriented DSPy starter for compiling, serving, and operating LLM programs with a teacher-student workflow.
@@ -12,7 +16,9 @@ Production-oriented DSPy starter for compiling, serving, and operating LLM progr
 
 ## Demo
 
-Add demo GIF or screenshot.
+<p align="center">
+  <img alt="DSPy Production Framework overview" src="https://github.com/user-attachments/assets/ff5a8818-aa7b-4e55-b89f-4802432c556d" />
+</p>
 
 ## Overview
 
